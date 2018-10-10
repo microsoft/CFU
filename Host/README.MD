@@ -1,2 +1,2 @@
 # CFU Sample Driver 
-[CFU Sample Driver](https://github.com/Microsoft/DMF) is an example CFU driver based on the Microsoft Devices Driver Module Framework.
+[The CFU Sample Driver](https://github.com/Microsoft/DMF) is an example CFU driver based on the Microsoft Devices Driver Module Framework (DMF).
