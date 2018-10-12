@@ -195,11 +195,12 @@ FirmwareUpdate_Component1_Sub.payload.bin
 
 5. Specify device capabilities in the INF.
 
-   The sample driver requires information about the underlying bus protocol to which the device is connected.
+   The sample driver provides a way to customize the driver behavior to optimize for certain scenarios. Those settings are controlled through registry settings, described [Configure device capabilities in the registry](#configure-device-capabilities-in-the-registry).
+   
+   For example, the sample driver requires information about the underlying bus protocol to which the device is connected. The protocol can be specified through registry settings.
 
-   The sample driver provides a way to customize the driver behavior to optimize for certain scenarios.
+   For the multiple package approach, device capabilities is specified in the device specific firmware file, and for a monolith package approach it is specified in the main INF file for the package.
 
-   For the multiple package approach, device capabilities is specified int the device specific firmware file, and for a monolith package approach it is specified in the main INF file for the package.
 
 ### 3. Provide WPP trace GUID
 
