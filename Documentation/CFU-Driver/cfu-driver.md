@@ -1,15 +1,12 @@
 # Component Firmware Update Driver
 
-The Microsoft Devices team has announced the release of an open-source model to update the firmware of peripheral devices– Component Firmware Update (CFU). The solution allows seamless and secure firmware update for components connected through interconnect buses such as USB, Bluetooth, I2C, etc. As part of the open-source effort, we are sharing a CFU protocol specification, sample CFU driver, and firmware sample code to allow device manufacturers to push firmware updates over Windows Update.
+The Microsoft Devices team has announced the release of an open-source model to update the firmware of peripheral devices– Component Firmware Update (CFU). The solution allows seamless and secure firmware update for components connected through interconnect buses such as USB, Bluetooth, I<sup>2</sup>C, etc. As part of the open-source effort, we are sharing a CFU protocol specification, sample CFU driver, and firmware sample code to allow device manufacturers to push firmware updates over Windows Update.
 
 - The sample CFU driver is a UMDF driver that talks to the device using the HID protocol. As a firmware developer, you can customize the driver for the purposes of adopting the CFU model to enable firmware updates for your component(s). Source: [CFU Driver](../CFU/Host).
 - CFU protocol specification describes a generic HID protocol to update firmware for components present on a PC or accessories. The specification allows for a component to accept firmware without interrupting the device operation during a download. Specification: [Component Firmware Update Protocol Specification](../CFU/Documentation/Specification)
 - The sample firmware code… Source: [CFU Firmware](../CFU/Host).
 
-## Outline
-
 - [Component Firmware Update Driver](#component-firmware-update-driver)
-    - [Outline](#outline)
     - [Before you begin ...](#before-you-begin)
     - [Overview](#overview)
     - [Customize the CFU driver sample](#customize-the-cfu-driver-sample)
@@ -92,6 +89,8 @@ Base package and extensions packages are serviced independently.
 
 Reference sample: <<link>>
 
+****
+
 #### The monolithic package approach
 
 In this approach, there is one driver package per CFU capable device. The package includes: INF, the CFU driver binary, and firmware files for the device.
@@ -173,9 +172,12 @@ Windows ensures that the driver is loaded when the component is enumerated on th
     
    - For the multiple package approach, update the extension INF for each component with information about your firmware files.
    - For a monolith package approach,update the INF file for the device.
-4. Update the SourceDisksFiles section and CopyFiles sections to reflect all the firmware files.
+
+4. Update the **SourceDisksFiles** and **CopyFiles** sections to reflect all the firmware files.
+
 <Just add the example>
-    > When the package(s) gets installed, teh OS replaces the %13% with the full path to the files before creating the registry values. Thus the driver able to enumerate the registry and identify all the firmware image and offer files.
+
+**Note** When the package(s) gets installed, the OS replaces the `%13%` with the full path to the files before creating the registry values. Thus the driver able to enumerate the registry and identify all the firmware image and offer files.
 
 5. Specify device capabilities in the INF.
 
@@ -275,8 +277,6 @@ The firmware file information is set in the INF as registry values. See [Configu
 **I have many firmware files, multiple offer, payload, for main component A and its subcomponents. How should I make the driver aware of which firmware file is meant for which component?** 
 
 The firmware file information is set in the INF as registry values. See [Configure the firmware file information](#_Configure_the_firmware) .
-
-****
 
 **I have an inbuilt components A and peripheral component B that needs an update. How Should I make this driver aware of this?**
 
