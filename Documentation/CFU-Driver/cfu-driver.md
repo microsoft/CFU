@@ -1,27 +1,52 @@
 # Component Firmware Update Driver
 
 The Microsoft Devices team has announced the release of an open-source model to update the firmware of peripheral devices– Component Firmware Update (CFU). The solution allows seamless and secure firmware update for components connected through interconnect buses such as USB, Bluetooth, I2C, etc. As part of the open-source effort, we are sharing a CFU protocol specification, sample CFU driver, and firmware sample code to allow device manufacturers to push firmware updates over Windows Update.
-- The sample CFU driver is a UMDF driver that talks to the device using the HID protocol. As a firmware developer, you can customize the driver for the purposes of adopting the CFU model to enable firmware updates for your component(s). 
-- CFU protocol specification describes a generic HID protocol to update firmware for components present on a PC or accessories. The specification allows for a component to accept firmware without interrupting the device operation during a download.
-- The sample firmware code…
+
+- The sample CFU driver is a UMDF driver that talks to the device using the HID protocol. As a firmware developer, you can customize the driver for the purposes of adopting the CFU model to enable firmware updates for your component(s). Source: [CFU Driver](../CFU/Host).
+- CFU protocol specification describes a generic HID protocol to update firmware for components present on a PC or accessories. The specification allows for a component to accept firmware without interrupting the device operation during a download. Specification: [Component Firmware Update Protocol Specification](../CFU/Documentation/Specification)
+- The sample firmware code… Source: [CFU Firmware](../CFU/Host).
+
+## Outline
+
+- [Component Firmware Update Driver](#component-firmware-update-driver)
+    - [Outline](#outline)
+    - [Before you begin ...](#before-you-begin)
+    - [Overview](#overview)
+    - [Customize the CFU driver sample](#customize-the-cfu-driver-sample)
+        - [1. Choose a deployment approach](#1-choose-a-deployment-approach)
+            - [The multiple packages approach (Recommended)](#the-multiple-packages-approach-recommended)
+            - [The monolithic package approach](#the-monolithic-package-approach)
+        - [2. Configure the CFU driver INF](#2-configure-the-cfu-driver-inf)
+        - [3. Provide WPP trace GUID](#3-provide-wpp-trace-guid)
+        - [4. Deploy the package through Windows Update](#4-deploy-the-package-through-windows-update)
+    - [Firmware File Format](#firmware-file-format)
+        - [Offer format](#offer-format)
+        - [Payload format](#payload-format)
+        - [Configure device capabilities in the registry](#configure-device-capabilities-in-the-registry)
+        - [Firmware update status provided by the driver](#firmware-update-status-provided-by-the-driver)
+    - [Troubleshooting Tips](#troubleshooting-tips)
+    - [FAQ](#faq)
+    - [Appendix](#appendix)
 
 ## Before you begin ... 
 
 Familiarize yourself with the CFU protocol.
-- [Blog: Introducing Component Firmware Update]
-- [Component Firmware Update Protocol Specification]
-- [Github Resources]
+
+- [Blog: Introducing Component Firmware Update](https://blogs.windows.com/buildingapps/2018/08/15/introducing-driver-module-framework/)
+- [Component Firmware Update Protocol Specification]()
+- [Github Resources](https://github.com/Microsoft/CFU/tree/)
 
 ## Overview
 
-To update the firmware image for your device by using the CFU model, you are expected
+To update the firmware image for your device by using the CFU model, you are expected,
+
 - To provide a CFU driver. This driver sends the firmware update to the device. We recommend that you customize the sample CFU driver to support your firmware update scenarios.
-- Your device must ship with a firmware image that is compliant with the CFU protocol so that it can accept an update from the CFU driver. 
+- Your device must ship with a firmware image that is compliant with the CFU protocol so that it can accept an update from the CFU driver.
 - The device must expose itself as HID device to the operating system (running the CFU driver) and expose a HID Top-Level Collection (TLC). The CFU driver loads on the TLC and sends the firmware update to the device. 
 
 This allows you to service your in-market devices through Windows Update. To update the firmware for a component, you deploy the CFU driver through the Windows update, and the driver gets installed on a Windows host. When the driver detects the presence of a component, it performs the necessary actions on the host and transmits the firmware image to the primary component on the device.
 
-![CFU firmware update](..\images\Transfer.png)
+![CFU firmware update](../images/Transfer.png)
 
 ## Customize the CFU driver sample
 
@@ -178,25 +203,25 @@ The offer file is a 16-byte binary data whose structure must match the format sp
 
 ### Payload format
 
-The payload file is a binary file which a collection of records that are stored contiguously. Each record is of the following format. 
+The payload file is a binary file which a collection of records that are stored contiguously. Each record is of the following format.
 
-| Offset  | Size  | Value | Description                 |
-| ------- | ----- | ----- | --------------------------- |
-| Byte    | 0     | DWORD | Firmware Address| Little Endian (LSB First) Address to write the data. The address is 0-based. Firmware could use this as an offset to determine the address as needed when placing the image in memory. |
-| Byte    | 4     | Byte  | Length | Length of payload data.  
-| Byte5-N | Bytes | Data  | Byte array of payload data. |
+| Offset   | Size  | Value            | Description                                                                                                                                                                            |
+| -------- | ----- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Byte 0   | DWORD | Firmware Address | Little Endian (LSB First) Address to write the data. The address is 0-based. Firmware could use this as an offset to determine the address as needed when placing the image in memory. |
+| Byte 4   | Byte  | Length           | Length of payload data.                                                                                                                                                                |
+| Byte 5-N | Bytes | Data             | Byte array of payload data.                                                                                                                                                            |
 
 ### Configure device capabilities in the registry
 
 You may configure each of these registries per component as needed.
 
-|Registry Value |Description |
-|---|---|
-|SupportResumeOnConnect|Does this component support resume from a previously interrupted update?<p>You can enable this feature if the component can continue to receive payload data starting at a point where it was interrupted earlier. </p><p>When this value is set, during the payload transfer stage, the driver checks to see whether a previous transfer of this payload was interrupted. If it was interrupted, it the driver only sends the payload data from the interrupted point instead of the entire payload. </p><p>Set to 1 to enable and 0 (default) to disable.</p> |
-|SupportProtocolSkipOptimization |<p>Does this component support skipping the entire protocol transaction for an already known all up to date firmware? </p><p>This is a driver side optimization option. If enabled, the driver checks these conditions during each initialization:<p><ul><li>Were all offers rejected in a previous cycle. </li><li>Does the current offers match the set of offers that the driver offered earlier.</li><ul></p><p>When the preceding conditions are satisfied, the driver skips the whole protocol transaction. <p>Set to 1 to enable and 0 (default) to disable.</p> |
-|Protocol |Specify these values based on the underlying HID transport for your component.<p>If your component is connected by HID-Over-USB, specify 1. (Default)</p><p>If your component is connected by HID-Over-Bluetooth, specify value 2.</p>|
+| Registry Value                      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **SupportResumeOnConnect**          | Does this component support resume from a previously interrupted update?<p>You can enable this feature if the component can continue to receive payload data starting at a point where it was interrupted earlier. </p><p>When this value is set, during the payload transfer stage, the driver checks to see whether a previous transfer of this payload was interrupted. If it was interrupted, it the driver only sends the payload data from the interrupted point instead of the entire payload. </p><p>Set to 1 to enable and 0 (default) to disable.</p>         |
+| **SupportProtocolSkipOptimization** | <p>Does this component support skipping the entire protocol transaction for an already known all up to date firmware? </p><p>This is a driver side optimization option. If enabled, the driver checks these conditions during each initialization:<p><ul><li>Were all offers rejected in a previous cycle. </li><li>Does the current offers match the set of offers that the driver offered earlier.</li><ul></p><p>When the preceding conditions are satisfied, the driver skips the whole protocol transaction. <p>Set to 1 to enable and 0 (default) to disable.</p> |
+| **Protocol**                        | Specify these values based on the underlying HID transport for your component.<p>If your component is connected by HID-Over-USB, specify 1. (Default)</p><p>If your component is connected by HID-Over-Bluetooth, specify value 2.</p>                                                                                                                                                                                                                                                                                                                                  |
 
-### Firmware update status provided by the driver 
+### Firmware update status provided by the driver
 
 During the protocol transaction, the CFU driver writes registry entries to indicate the status.  This table describes the name, format of values and meaning of values that the driver touches during various stages of the protocol.
 
@@ -206,22 +231,17 @@ During the protocol transaction, the CFU driver writes registry entries to indic
 
 | **Stage**  | **Location**  | **Reg Value Name**  | **Value (DWORD)**  | 
 |:--|:--|:--|:--|
-| Start; {Device Hardware key}\ComponentFirmwareUpdate  | "Component<ID>CurrentFwVersion"  | Version from device  | 
-Pre Offer.  | 
+| Start; Pre Offer. | {Device Hardware key}\ComponentFirmwareUpdate  | "Component<ID>CurrentFwVersion"  | Version from device  | 
 |  | {Device Hardware key}\ComponentFirmwareUpdate  | "Component<ID>FirmwareUpdateStatus"  | FIRMWARE_UPDATE_STATUS_NOT_STARTED  | 
 | Offer; About to send offer.  | {Device Hardware key}\ComponentFirmwareUpdate  | "Component<ID>OfferFwVersion"  | Version that is sent (or about to be send) to the device. | 
-| Offer Response{Device Hardware key}\ComponentFirmwareUpdate  | "Component<ID>FirmwareUpdateStatusRejectReason"  | Reason for rejection returned by device. | 
-(Rejected).  | 
-| Offer Response{Device Hardware key}\ComponentFirmwareUpdate  | "Component<ID>FirmwareUpdateStatus"  | FIRMWARE_UPDATE_STATUS_BUSY_PROCESSING_UPDATE  | 
-(Device Busy).  | 
-| Offer Response{Device Hardware key}\ComponentFirmwareUpdate  | "Component<ID>FirmwareUpdateStatus"  | FIRMWARE_UPDATE_STATUS_DOWNLOADING_UPDATE  | 
-(Accepted); About to send Payload.  | 
+| Offer Response (Rejected)|{Device Hardware key}\ComponentFirmwareUpdate  | "Component<ID>FirmwareUpdateStatusRejectReason"  | Reason for rejection returned by device. | 
+| Offer Response (Device Busy)|{Device Hardware key}\ComponentFirmwareUpdate  | "Component<ID>FirmwareUpdateStatus"  | FIRMWARE_UPDATE_STATUS_BUSY_PROCESSING_UPDATE  | 
+| Offer Response (Accepted); About to send Payload.|{Device Hardware key}\ComponentFirmwareUpdate  | "Component<ID>FirmwareUpdateStatus"  | FIRMWARE_UPDATE_STATUS_DOWNLOADING_UPDATE  |  
 | Payload Accepted.  | {Device Hardware key}\ComponentFirmwareUpdate  | "Component<ID>FirmwareUpdateStatus"  | FIRMWARE_UPDATE_STATUS_PENDING_RESET  | 
 | Error at any stage.  | {Device Hardware key}\ComponentFirmwareUpdate  | "Component<ID>FirmwareUpdateStatus"  | FIRMWARE_UPDATE_STATUS_ERROR  | 
 
 
-### Troubleshooting Tips
-
+## Troubleshooting Tips
 
 1. Check WPP logs to see the driver side interaction per component. 
 
