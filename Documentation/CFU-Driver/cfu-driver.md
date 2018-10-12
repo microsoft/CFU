@@ -175,7 +175,21 @@ Windows ensures that the driver is loaded when the component is enumerated on th
 
 4. Update the **SourceDisksFiles** and **CopyFiles** sections to reflect all the firmware files.
 
-<Just add the example>
+```
+[SourceDisksFiles]
+
+FirmwareUpdate_Component1_Main.offer.bin=1
+FirmwareUpdate_Component1_Main.payload.bin=1
+FirmwareUpdate_Component1_Sub.offer.bin=1
+FirmwareUpdate_Component1_Sub.payload.bin=1
+
+[FirmwareUpdate_Component1.CopyFiles]
+
+FirmwareUpdate_Component1_Main.offer.bin
+FirmwareUpdate_Component1_Main.payload.bin
+FirmwareUpdate_Component1_Sub.offer.bin
+FirmwareUpdate_Component1_Sub.payload.bin
+```
 
 **Note** When the package(s) gets installed, the OS replaces the `%13%` with the full path to the files before creating the registry values. Thus the driver able to enumerate the registry and identify all the firmware image and offer files.
 
@@ -256,12 +270,12 @@ During the protocol transaction, the CFU driver writes registry entries to indic
 
 **I have a component A that needs an update, how can I make the CFU driver aware of component A?** 
 
-You need to [configure the INF](#_Configuring_hardware_ID)  by using the hardware ID of the TLC created by component A. 
+You need to [configure the CFU driver INF](#2-configure-the-cfu-driver-inf) by using the hardware ID of the TLC created by component A.
 
 
 **My company ships several independent components that I want to update by using the CFU model. Do I need separate drivers and package them individually?**
 
-We recommended that you use the multiple packaging approach described  in [Multiple Packages](#_Multiple_Packages) .
+We recommend that you use the multiple packaging approach described  in [Multiple Packages](#the-multiple-packages-approach-recommended) .
 
 
 **I have two components: component A, and a sub-component B. How should I make the CFU driver aware of component B?**
@@ -271,12 +285,12 @@ You don’t need to. The driver doesn’t need to know about the component hiera
 
 **How can I make the driver aware about my firmware files (offer, payload) file that I need to send to my component A?**
 
-The firmware file information is set in the INF as registry values. See [Configure the firmware file information](#_Configure_the_firmware) .
+The firmware file information is set in the INF as registry values. [configure the CFU driver INF](#2-configure-the-cfu-driver-inf) .
 
 
 **I have many firmware files, multiple offer, payload, for main component A and its subcomponents. How should I make the driver aware of which firmware file is meant for which component?** 
 
-The firmware file information is set in the INF as registry values. See [Configure the firmware file information](#_Configure_the_firmware) .
+The firmware file information is set in the INF as registry values. See Step 3 in [configure the CFU driver INF](#2-configure-the-cfu-driver-inf).
 
 **I have an inbuilt components A and peripheral component B that needs an update. How Should I make this driver aware of this?**
 
@@ -285,12 +299,12 @@ You do not need to make the driver aware of the component in this case. The driv
 
 **Component A uses HID-Over-USB, component B is uses HID-Over-Bluetooth. How should I pass this information to the driver?**
 
-Specify the correct capability by using the registry **Protocol** value. See [Configure device capabilities in the registry](#_Configure_device_capabilities)  for details.
+Specify the correct capability by using the registry **Protocol** value. See [Configure device capabilities in the registry](#configure-device-capabilities-in-the-registry) for details.
 
 
 **I am reusing the same driver for my components, are there any other customizations possible per usage scenarios?**
 
-There are certain optimization settings that the driver allows. Those are configured in the registry. See [Configure device capabilities in the registry](#_Configure_device_capabilities)  for details. 
+There are certain optimization settings that the driver allows. Those are configured in the registry. See [Configure device capabilities in the registry](#configure-device-capabilities-in-the-registry) for details. 
 
 
 **I am using the driver for firmware updates.  How do I know an update has succeeded?**
@@ -303,47 +317,5 @@ The firmware update status is updated by the driver in the registry as part of b
 * Familiarize yourself with developing Windows drivers by using Windows Driver Foundation (WDF). 
 [Developing Drivers with Windows Driver Foundation](http://go.microsoft.com/fwlink/p/?LinkId=691676) , written by Penny Orwick and Guy Smith.
 
-[Using WDF to Develop a Driver](https://docs.microsoft.com/en-us/windows-hardware/drivers/wdf/using-the-framework-to-develop-a-driver) 
-
-
-
-
-
-
-
-
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+   [Using WDF to Develop a Driver](https://docs.microsoft.com/en-us/windows-hardware/drivers/wdf/using-the-framework-to-develop-a-driver) 
 
