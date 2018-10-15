@@ -1,0 +1,3 @@
+[submodule "Host/DMF"]
+	path = Host/DMF
+	url = https://github.com/Microsoft/DMF

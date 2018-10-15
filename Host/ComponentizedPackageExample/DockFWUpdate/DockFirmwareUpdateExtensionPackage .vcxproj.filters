@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="Dock_Audio.offer.bin">
+      <Filter>Firmware Files</Filter>
+    </None>
+    <None Include="Dock_Audio.payload.bin">
+      <Filter>Firmware Files</Filter>
+    </None>
+    <None Include="Dock_MCU.offer.bin">
+      <Filter>Firmware Files</Filter>
+    </None>
+    <None Include="Dock_MCU.payload.bin">
+      <Filter>Firmware Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Firmware Files">
+      <UniqueIdentifier>{9f80706d-466f-460b-a99d-0ec78970e3aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Driver Files">
+      <UniqueIdentifier>{b89e24d6-eb6d-4e57-84c0-0522133ec2fc}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Inf Include="DockFirmwareUpdate.inx">
+      <Filter>Driver Files</Filter>
+    </Inf>
+  </ItemGroup>
+</Project>
