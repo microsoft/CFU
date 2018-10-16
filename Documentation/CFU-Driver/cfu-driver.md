@@ -110,8 +110,9 @@ In this approach, there is one driver package per CFU capable device. The packag
 
 **Challenges**
 
-- If you ship multiple devices by using a single package, you must must copy the package for each device and change the name of the package contents to reflect the device. driver binary to avoid name conflicts. For example, you are deploying Contoso Keyboard and COntoso Mouse by using package, Contoso. You must copy the package for both devices and rename the driver binary, INF, payload file as shown in the example.  
+- If you ship multiple devices by using a single package, you must must copy the package for each device and change the name of the package contents to reflect the device. driver binary to avoid name conflicts. For example, you are deploying a dock device and laptop by using one package. You must copy the package for both devices and rename the driver binary, INF, payload file as shown in the example.  
 - Because one INF is used for multiple devices, the driver and firmware file(s) for multiple devices are bundled in one package. This approach can unnecessarily bloat the package.
+
 
 **Example**
 
@@ -138,6 +139,7 @@ Reference sample: [MonolithicPackageExample](../Host/MonolithicPackageExample)
 
 ### 2. Configure the CFU driver INF
 The sample CFU driver is extensible. To tune the driver’s behavior, change the driver INF instead of the source code.
+
 
 1. Update the INF with the hardware ID of the HID TLC intended for firmware update.
 Windows ensures that the driver is loaded when the component is enumerated on the host.
@@ -177,7 +179,7 @@ Windows ensures that the driver is loaded when the component is enumerated on th
 
     [FirmwareUpdate_Component1_HWAddReg]
     
-    HKR,CFU\\_FDock_MCU_,Offer, 0x00000000,%13%\\_Dock_MCU.offer.bin_
+    HKR,CFU\\_Dock_MCU_,Offer, 0x00000000,%13%\\_Dock_MCU.offer.bin_
         
     HKR,CFU\\_Dock_MCU_,Payload, 0x00000000, %13%\\_Dock_MCU.payload.bin_
         
@@ -213,6 +215,18 @@ Windows ensures that the driver is loaded when the component is enumerated on th
 
    Reference sample: [Device.h](../Host/ComponentFirmwareUpdateDriver/Device.h)
 
+3. Specify the Report IDs that the driver uses.
+    
+    ```
+    #define REPORT_ID_FW_VERSION_FEATURE      0x20
+    #define REPORT_ID_PAYLOAD_CONTENT_OUTPUT  0x20
+    #define REPORT_ID_PAYLOAD_RESPONSE_INPUT  0x22
+    #define REPORT_ID_OFFER_CONTENT_OUTPUT    0x25
+    #define REPORT_ID_OFFER_RESPONSE_INPUT    0x25
+    ```
+    
+    If you need a different set of report IDs, modify [Dmf_ComponentFirmwareUpdateHidTransport.c](https://github.com/Microsoft/DMF/blob/master/Dmf/Modules.Library/Dmf_ComponentFirmwareUpdateHidTransport.c).
+    
 
 ### 4. Deploy the package through Windows Update
 
