@@ -1,7 +1,5 @@
-# CFU Sample Driver 
-The [CFU Sample Driver](https://github.com/Microsoft/DMF) is an example CFU driver based on the Microsoft Devices Driver Module Framework (DMF). 
-
-This folder contains:
+# CFU Sample Drivers 
+The sample CFU drivers are based on the Microsoft Devices Driver Module Framework (DMF). This folder contains:
     Sample CFU driver (ComponentFirmwareUpdateDriver) and 
     Examples of adopting the driver to enable firmware update scenarios using the componentized and monolothic packaging techniques.
 
