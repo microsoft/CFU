@@ -108,8 +108,8 @@ In this approach, there is one driver package per CFU capable device. The packag
 
 **Challenges**
 
-- If you ship multiple devices by using a single package, you must must copy the package for each device and change the name of the package contents to reflect the device. driver binary to avoid name conflicts. For example, you are deploying a dock device and laptop by using one package. You must copy the package for both devices and rename the driver binary, INF, payload file as shown in the example.  
-- Because one INF is used for multiple devices, the driver and firmware file(s) for multiple devices are bundled in one package. This approach can unnecessarily bloat the package.
+- If you update multiple devices by using a single package, you will loose ability to service each device independenly. This approach can unnecessarily bloat the package.
+- If you update each of your devices by using its own single package, you must must ensure that the package refers to different driver binary to avoid name conflicts, as shown in the example.  
 
 
 **Example**
@@ -154,21 +154,21 @@ Windows ensures that the driver is loaded when the component is enumerated on th
     
         %ComponentFirmwareUpdate.DeviceDesc%=ComponentFirmwareUpdate, HID\HID\VID_jkl&UP:mno_U:pqr ; Your HardwareID- Dock MCU
         ```
-    2. Start with the DockFirmwareUpdate.inx as the extension package INF. Provide the hardware ID for each of your component in the device in this section. 
+    2. Start with the DockFirmwareUpdate.inx as the extension package INF. Provide the hardware ID for your primary component in the device in this section. 
         ```
         [Standard.NT$ARCH$]
         %DockFirmwareUpdate.ExtensionDesc%=DockFirmwareUpdate, HID\....; Your HardwareID for Dock MCU
         ```
     3. Add a new extension package for each component.
 
-    **The componentized packages approach**
+    **The monolithic package approach**
 
-    1. Start with LaptopFirmwareUpdate.inx here. Replace the hardware ID in in this section with hardwareID(s) of all your supported devices.
+    1. Start with LaptopFirmwareUpdate.inx here. Replace the hardware ID in in this section with hardwareID for your primary component in the device in this section.
         ```
         [Standard.NT$ARCH$]
         %LaptopFirmwareUpdate.DeviceDesc%=LaptopFirmwareUpdate, HID\.... ; Your HardwareID for Laptop MCU
         ```
-    2. For each component, copy the package and replace the hardware ID of the component. Rename the CFU driver to prevent a name conflict amongst packages.
+    2. For each component, create the package and replace the hardware ID of the component. Rename the CFU driver to prevent a name conflict amongst packages.
 3. Update the INF to specify the location of firmware file for each component on the device.
 
     The firmware files are not part of the driver binary. The driver needs to know the firmware file location at runtime so that it can transmit to the component. For a multi-component device, there may be more than one firmware file.
@@ -186,7 +186,7 @@ Windows ensures that the driver is loaded when the component is enumerated on th
     HKR,CFU\\_Dock_Audio_Sub_,Payload, 0x00000000, %13%\\_Dock_Audio.payload.bin_
     
    - For the multiple package approach, update the extension INF for each component with information about your firmware files.
-   - For a monolith package approach,update the INF file for the device.
+   - For a monolithic package approach, update the INF file for the device.
 
 4. Update the **SourceDisksFiles** and **CopyFiles** sections to reflect all the firmware files. To see an example, see [DockFirmwareUpdate.inx](../Host/ComponentizedPackageExample/DockFWUpdate/DockFirmwareUpdate.inx)
 
