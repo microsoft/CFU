@@ -1,0 +1,78 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; File:               LaptopMCUFirmwareUpdate.inx
+;
+; Description:        Driver installation file for Laptop MCU, FPGA, TCPM firmware update.
+;
+; Copyright (C) Microsoft Corporation.  All Rights Reserved.
+; Licensed under the MIT license.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[Version]
+Signature="$Windows NT$"
+Class = Extension
+ClassGuid = {e2f84ce7-8efa-411c-aa69-97454ca4cb57}
+Provider=%ManufacturerName%
+ExtensionId = {2AF1B390-43F7-444A-B968-9301F408A105} ; Define Your Extension ID here.
+CatalogFile=LaptopMCUFirmwareUpdate.cat
+DriverVer= ;
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%LaptopMCUFirmwareUpdate.ExtensionDesc%=LaptopMCUFirmwareUpdate, HID\.... ; Your HardwareID for Laptop MCU
+
+[LaptopMCUFirmwareUpdate.NT]
+CopyFiles=LaptopMCUFirmwareUpdate.CopyFiles
+
+[LaptopMCUFirmwareUpdate.NT.HW]
+AddReg = LaptopMCUFirmwareUpdate_HWAddReg
+
+[SourceDisksNames]
+1 = %DiskName%
+
+[DestinationDirs]
+LaptopMCUFirmwareUpdate.CopyFiles=13
+
+; =================== FW Information ===========================
+[LaptopMCUFirmwareUpdate_HWAddReg]
+HKR,,Protocol,0x00010001, 1           ;(PROTOCOL-USB)
+HKR,,FriendlyName,,%FwUpdateFriendlyName%
+; Specify the location of the firmware offer and payload file in the registy.
+; The files are kept in driver store. When deployed, %13% would be expanded to the actual path 
+; in driver store.
+;
+; You can change subkey name under CFU (e.g. "Laptop_MCU"), and specify your own offer 
+; (e.g. "Laptop_MCU.offer.bin") and payload (e.g "Laptop_MCU.payload.bin") file name.
+;
+HKR,CFU\Laptop_MCU, Offer,   0x00000000, %13%\Laptop_MCU.offer.bin 
+HKR,CFU\Laptop_MCU, Payload, 0x00000000, %13%\Laptop_MCU.payload.bin 
+HKR,CFU\Laptop_FPGA,Offer,   0x00000000, %13%\Laptop_FPGA.offer.bin 
+HKR,CFU\Laptop_FPGA,Payload, 0x00000000, %13%\Laptop_FPGA.payload.bin 
+HKR,CFU\Laptop_TCPM,Offer,   0x00000000, %13%\Laptop_TCPM.offer.bin 
+HKR,CFU\Laptop_TCPM,Payload, 0x00000000, %13%\Laptop_TCPM.payload.bin 
+
+[SourceDisksFiles]
+Laptop_MCU.offer.bin=1 
+Laptop_MCU.payload.bin=1 
+Laptop_FPGA.offer.bin=1 
+Laptop_FPGA.payload.bin=1 
+Laptop_TCPM.offer.bin=1 
+Laptop_TCPM.payload.bin=1 
+
+[LaptopMCUFirmwareUpdate.CopyFiles]
+Laptop_MCU.offer.bin 
+Laptop_MCU.payload.bin 
+Laptop_FPGA.offer.bin 
+Laptop_FPGA.payload.bin 
+Laptop_TCPM.offer.bin 
+Laptop_TCPM.payload.bin 
+
+; =================== Generic ==================================
+
+[Strings]
+ManufacturerName="{Your Manufacturer Name}"
+LaptopMCUFirmwareUpdate.ExtensionDesc="Laptop MCU Firmware Update"
+DiskName = "Laptop MCU Firmware Update Installation Disk"
+FwUpdateFriendlyName= "Laptop MCU Firmware Update"
+
