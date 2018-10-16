@@ -16,7 +16,10 @@ DMF:  This folder should contain the DMF source code. Use 'git submodule update'
 
 
 # How to use this?
-First get the Driver Module Framework (DMF) submodules required to build the samples.
+
+First, install Visual Studio and Windows Driver Kit (WDK) following the steps [here](https://docs.microsoft.com/en-us/windows-hardware/drivers/download-the-wdk)
+
+Then, run the following git commands to get the Driver Module Framework (DMF) submodule required to build the samples.
 ## "git submodule init"
 ## "git submodule update"
 
