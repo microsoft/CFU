@@ -16,7 +16,7 @@ DMF:  This folder should contain the DMF source code. Use 'git submodule update'
 
 
 # How to use this?
-
+First get the DMF submodules by doing "git submodule init", and then "git submodule update"
 Use any of the below Solutions to see the examples of how to use the sample driver using Extension INF.
 
 ComponentizedPackageExample\DockFWUpdate\DockFirmwareUpdateWithExtension.sln
