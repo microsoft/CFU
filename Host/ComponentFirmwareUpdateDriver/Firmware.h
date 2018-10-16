@@ -9,7 +9,7 @@ Module Name:
 
 Abstract:
 
-   Companion file to Firmware.h.
+   Companion file to Firmware.c.
     
 Environment:
 
