@@ -19,9 +19,6 @@ PnPLockDown=1
 [SourceDisksNames]
 1 = %DiskName%
 
-[SourceDisksFiles]
-LaptopMCUFirmwareUpdate.dll=1
-
 [Manufacturer]
 %ManufacturerName%=Standard,NT$ARCH$
 
@@ -58,6 +55,7 @@ Laptop_FPGA.offer.bin=1
 Laptop_FPGA.payload.bin=1 
 Laptop_TCPM.offer.bin=1 
 Laptop_TCPM.payload.bin=1 
+LaptopMCUFirmwareUpdate.dll=1
 
 [LaptopMCUFirmwareUpdate.CopyFiles]
 Laptop_MCU.offer.bin 
