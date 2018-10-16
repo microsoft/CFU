@@ -186,7 +186,7 @@ Windows ensures that the driver is loaded when the component is enumerated on th
     HKR,CFU\\_Dock_Audio_Sub_,Payload, 0x00000000, %13%\\_Dock_Audio.payload.bin_
     
    - For the multiple package approach, update the extension INF for each component with information about your firmware files.
-   - For a monolith package approach,update the INF file for the device.
+   - For a monolithic package approach, update the INF file for the device.
 
 4. Update the **SourceDisksFiles** and **CopyFiles** sections to reflect all the firmware files. To see an example, see [DockFirmwareUpdate.inx](../../Host/ComponentizedPackageExample/DockFWUpdate/DockFirmwareUpdate.inx)
 
