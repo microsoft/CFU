@@ -53,12 +53,7 @@ Environment:
 //                                  TYPEDEFS
 //
 //****************************************************************************
-typedef struct
-{
-    UINT32 (*Reader)         (UINT32 offset, UINT8* pData, UINT8 length);
-    UINT32 (*Writer)         (UINT32 offset, UINT8* pData, UINT8 length);
-    UINT32 (*Prepare)        (void);
-} IEXTERNAL_STORAGE;
+
 //****************************************************************************
 //
 //                          GLOBAL VARIABLE EXTERNS
@@ -72,14 +67,24 @@ typedef struct
 //****************************************************************************
 
 // Readers and writers for firmware update intermediates/self update handlers
+// Developer TODO - implement function to prepare memory to receive image.
+//                  (NOTE: if image stored to flash/NVM, this is typically where
+//                   the flash area is erased)
 UINT32 ICompFwUpdateBspPrepare(UINT8 componentId);
+
+// Developer TODO - implement function to write data chunk memory/flash.
 UINT32 ICompFwUpdateBspWrite(UINT32 offset, UINT8* pData, UINT8 length, UINT8 componentId);
+
+// Developer TODO - implement function to read data chunk from memory/flash.
 UINT32 ICompFwUpdateBspRead(UINT32 offset, UINT8* pData, UINT16 length, UINT8 componentId);
-// Component specific CRC calculator. 
+
+// Developer TODO - implement function to calculate the CRC for the specific component image
 UINT32 ICompFwUpdateBspCalcCRC(UINT16 *pCRC, UINT8 componentId);
 
-// Signaled when internal MCU fwupdate is complete.
-void ICompFwUpdateBspSignalUpdateComplete(void);
+// Developer TODO - implement function to perform authentication check for the specific component image
+INT32 ICompFwUpdateBspAuthenticateFWImage(void);
 
-// If external storage is available on platform, it can be registered with this module.
-void ICompFwUpdateBspRegisterExternalStorage(IEXTERNAL_STORAGE* pInterface);
+// Developer TODO - implement function to perform any required functionality to let the 
+//                  system know a new image has been downloaded and verified. (ex: this
+//                  could be where the boot loader is modified to point to the new image )
+void ICompFwUpdateBspSignalUpdateComplete(void);

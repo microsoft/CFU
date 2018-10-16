@@ -40,11 +40,11 @@ Environment:
 //
 //****************************************************************************
 #include <stdlib.h>
-#include "inc\coretypes.h"
-#include "inc\ComponentFwUpdate.h"
-#include "inc\ICompFwUpdateBsp.h"
-#include "inc\IComponentFirmwareUpdate.h"
-#include "inc\FwVersion.h"
+#include "coretypes.h"
+#include "ComponentFwUpdate.h"
+#include "ICompFwUpdateBsp.h"
+#include "IComponentFirmwareUpdate.h"
+#include "FwVersion.h"
 
 #define CPFWU_REVISION  (2u)
 
@@ -53,15 +53,16 @@ Environment:
 //                                  DEFINES
 //
 //****************************************************************************
-// BSP Modify Timer functionality to meet your platform needs.
+// Developer TODO  - Modify Timer functionality to meet your platform needs.
 typedef UINT16 TIMER_ID; // change this to your needs for timer definition
 TIMER_ID BSP_Timer_Create ( void (* pTimerCallback)(void), UINT32 timeoutMs){return (TIMER_ID) 1;}
 void BSP_Timer_Stop(TIMER_ID timerId){}
 void BSP_Timer_Restart(TIMER_ID timerId){}
-// /BSP  
+// 
 
 // Maximum time for a single image update to finish.
 //   if it takes longer than this - the CFU engine is reset.
+// Developer TODO  - set your own time out value
 #define MAX_FW_UPDATE_TIME_FAIL_SAFE_MS         (20 * 60 * 1000)
 
 //****************************************************************************
@@ -113,13 +114,24 @@ static UINT32 FirmwareUpdateInit(void);
 //****************************************************************************
 static void _ReadCompleteCallback(void)
 {
+	// Update of image has completed successfully. 
     s_currentOffer.updateInProgress = FALSE;
 }
 
 static void _UpdateTimerCallback(void)
 {
+	// Note: Typically you should wrap these timer callbacks
+	//       in a thread safe construct (Critical section etc).
+	//       Some implementations have timer task as highest
+	//       priority which would mitigate the requirement for this
+	//       example.
+	
+	// Developer TODO  -Implementation of thread safety is left to developer
+	//                  (example crit section calls below)
+	//  ENTER_CRITICAL_SECTION();
     s_currentOffer.updateInProgress = FALSE;
     BSP_Timer_Stop(s_updateTimer);
+	//  EXIT_CRITICAL_SECTION();
 }
 
 //****************************************************************************
@@ -147,7 +159,10 @@ UINT32 FirmwareUpdateInit(void)
 //******************************************************************************
 //
 // ProcessCFWUContent - Process the content component firmware update command.
-//
+//                      NOTE: this function is non reentrant - only to be called
+//                            from single thread. If this is not the case
+//                            for your implementation - extra care must be
+//                            made for thread safety.
 // Input Parameters
 //      FWUPDATE_CONTENT_COMMAND* pCommand - The command to process.
 //      FWUPDATE_CONTENT_RESPONSE* pResponse - The response to populate.
@@ -188,11 +203,21 @@ void ProcessCFWUContent(FWUPDATE_CONTENT_COMMAND* pCommand,
             MCU_STATUS getCrcOffsetResult = MCU_STATUS_DEFAULT_ERROR;
             UINT32 crcOffset = 0;
 
+			// NOTE: it is assumed component registration has already been completed
+			//       before this function is called and that registration will not
+			//       change for the duration of the running image. If this is NOT
+			//       correct for your implementation - it is left up to the developer
+			//       to wrap the registration iteration below in a thread safe construct.
             while (pRegistration)
             {
                 if (pRegistration->componentId == componentId)
                 {
-                    // Found a matching componentId, Get the CRC
+                    // Found a matching componentId.
+					// Each component image should have an embedded CRC in the 
+					// downloaded image. Get the CRC offset for this particular component
+					// image. 
+					// Developer TODO- provide implementation of these helper functions
+					//                 that have a priori knowledge of crc/image
                     getCrcOffsetResult = pRegistration->interface.GetCrcOffset(&crcOffset);
                     break;
                 }
@@ -205,7 +230,7 @@ void ProcessCFWUContent(FWUPDATE_CONTENT_COMMAND* pCommand,
                 // Error retrieving crc offset
                 status = FIRMWARE_UPDATE_STATUS_ERROR_INVALID;
             }
-            else if (getCrcOffsetResult != MCU_STATUS_NVM_CRC_CHECK_NOT_REQUIRED)
+            else if (getCrcOffsetResult != MCU_STATUS_CFU_CRC_CHECK_NOT_REQUIRED)
             {
                 // CRC check required
                 UINT16 crc;
@@ -229,13 +254,33 @@ void ProcessCFWUContent(FWUPDATE_CONTENT_COMMAND* pCommand,
                     
                     //Perform any other image verification here
                     //  ex. Signatures, cert, encryption/decryption etc
+
+					// Best practices require that this image be verified to have come 
+					// from a non-rogue entity. To accomplish this, the image should
+					// be authenticated by some sort of cryptologically safe mechanism.
+					// (ex. certificate verification, pub/private key signing etc)
+					// Developer TODO- provide implementation of this authentification 
+					//                 implementation for their FW image.
+					if (ICompFwUpdateBspAuthenticateFWImage() != 0)
+					{
+						status = FIRMWARE_UPDATE_STATUS_ERROR_SIGNATURE;
+					}
                 }
             }
             else
             {
-                // Skipping CRC check, notifying firmware ready
-                //OR Perform any other image verification here
-                //  ex. Signatures, cert, encryption/decryption etc
+                // Skipping CRC check 
+
+				// Best practices require that this image be verified to have come 
+				// from a non-rogue entity. To accomplish this, the image should
+				// be authenticated by some sort of cryptologically safe mechanism.
+				// (ex. certificate verification, pub/private key signing etc)
+				// Developer TODO- provide implementation of this authentification 
+				//                 implementation for their FW image.
+				if (ICompFwUpdateBspAuthenticateFWImage() != 0)
+				{
+					status = FIRMWARE_UPDATE_STATUS_ERROR_SIGNATURE;
+				}
             }
 
             if (status == FIRMWARE_UPDATE_STATUS_SUCCESS)
@@ -288,6 +333,10 @@ void ProcessCFWUContent(FWUPDATE_CONTENT_COMMAND* pCommand,
 //******************************************************************************
 //
 // ProcessCFWUOffer - Process the offer component firmware update command.
+//                      NOTE: this function is non reentrant - only to be called
+//                            from single thread. If this is not the case
+//                            for your implementation - extra care must be
+//                            made for thread safety. 
 //
 // Input Parameters
 //      FWUPDATE_OFFER_COMMAND* pCommand - The command to process.
@@ -361,6 +410,11 @@ void ProcessCFWUOffer(FWUPDATE_OFFER_COMMAND* pCommand,
     //    user software to move towards the action of submitting Content.
     COMPONENT_REGISTRATION* pRegistration = s_pFirstComponentIFace;
 
+	// NOTE: it is assumed component registration has already been completed
+	//       before this function is called and that registration will not
+	//       change for the duration of the running image. If this is NOT
+	//       correct for your implementation - it is left up to the developer
+	//       to wrap the registration iteration below in a thread safe construct.
     while (pRegistration)
     {
         if (pRegistration->componentId == componentId)
@@ -371,11 +425,14 @@ void ProcessCFWUOffer(FWUPDATE_OFFER_COMMAND* pCommand,
             // Found a matching componentId, present the offer to the handler
             pRegistration->interface.ProcessOffer(pCommand, pResponse);
 
-            // If we're ignoring FWVersion check, and that was the reason 
+            // This sample code shows how to send offer information
+			//  that includes the request to ignore checking any version
+			//  info. 
+			// If we're ignoring FWVersion check, and that was the reason 
             // the offer was rejected, reverse the decision
             //  NOTE: in released/final Firmware, this ability to accept
             //        any version is usually disabled in FW (this is a TODO
-            //        for implementers of CFU
+            //        for implementers of CFU)
             if (ignoreVersion)
             {
                 if ((pResponse->status == FIRMWARE_UPDATE_OFFER_REJECT) 
@@ -385,8 +442,9 @@ void ProcessCFWUOffer(FWUPDATE_OFFER_COMMAND* pCommand,
                 }
             }
 
-            // This is the point detecting that the offer is accepted, so the logic
-            // starts a timer, and copies the flags from the offer.
+            // This is the point detecting that the offer is accepted
+			// This implementation starts a timer to ensure the FW
+			// does not wait forever for the update process to complete.
             if (pResponse->status == FIRMWARE_UPDATE_OFFER_ACCEPT)
             {
                 BSP_Timer_Restart(s_updateTimer);
@@ -419,6 +477,7 @@ void ProcessCFWUGetFWVersion(GET_FWVERSION_RESPONSE* pResponse)
 
     memset(pResponse, 0, sizeof(GET_FWVERSION_RESPONSE));
 
+	//CFU Protocol version
     pResponse->header.fwUpdateRevision = CPFWU_REVISION;
 
     COMPONENT_REGISTRATION* pRegistration = s_pFirstComponentIFace;
@@ -429,8 +488,18 @@ void ProcessCFWUGetFWVersion(GET_FWVERSION_RESPONSE* pResponse)
     pRegistration = s_pFirstComponentIFace;
     UINT32* pVersion = (UINT32*)pResponse->versionAndProductInfoBlob;
 
+	// NOTE: it is assumed component registration has already been completed
+	//       before this function is called and that registration will not
+	//       change for the duration of the running image. If this is NOT
+	//       correct for your implementation - it is left up to the developer
+	//       to wrap the registration iteration below in a thread safe construct.
     while (pRegistration)
     {
+		// This gathers the version and product info
+		// of ALL the components that this FW has 
+		// registered for.
+		// Developer TODO - implement and register version and product 
+		//                  info gathering functions
         pRegistration->interface.GetVersion(pVersion);
         *pVersion++;
         pRegistration->interface.GetProductInfo(pVersion);
@@ -457,12 +526,17 @@ void IComponentFirmwareUpdateRegisterComponent(COMPONENT_REGISTRATION* pRegistra
         return;
     }
 
-    // BSP - will need to wrap the below in 
-    //       CRITICAL_ENTER();
+    // Because registration can happen from any thread
+	// - we will need to wrap the below in a thread safe construct
+	//   It is left up to implementation to provide such construct.
+	
+	// Developer TODO  -Implementation of thread safety is left to developer
+	//                  (example crit section calls below)
+	//  ENTER_CRITICAL_SECTION();
     {
         pRegistration->pNext = s_pFirstComponentIFace;
         s_pFirstComponentIFace = pRegistration;
     }
-    // BSP - CRITICAL_LEAVE();
+    // EXIT_CRITICAL_SECTION();;
 }
 
