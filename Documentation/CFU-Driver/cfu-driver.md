@@ -1,4 +1,4 @@
-# Component Firmware Update Driver
+﻿# Component Firmware Update Driver
 
 The Microsoft Devices team has announced the release of an open-source model to update the firmware of peripheral devices– Component Firmware Update (CFU). The solution allows seamless and secure firmware update for components connected through interconnect buses such as USB, Bluetooth, I<sup>2</sup>C, etc. As part of the open-source effort, we are sharing a CFU protocol specification, sample CFU driver, and firmware sample code to allow device manufacturers to push firmware updates over Windows Update.
 
@@ -75,19 +75,17 @@ Base package and extensions packages are serviced independently.
 
 - Base Package
   - ComponentFirmwareUpdate.inf
-  - ComponentFirmwareUpdateBasePackage.dll
+  - ComponentFirmwareUpdate.dll
 
 - Extension Package for a dock device
   - DockFirmwareUpdate.inf
-  - DockFirmwareUpdateExtensionPackage.bin
   - Dock_Audio.offer.bin
   - Dock_Audio.payload.bin
   - Dock_MCU.offer.bin
   - Dock_MCU.payload.bin
 
-- Extension Package for a LaptopMCU device
+- Extension Package for components of a Laptop
   - LaptopMCUFirmwareUpdate.inf
-  - LaptopMCUFirmwareUpdateWithExtension.dll
   - laptop_FPGA.offer.bin
   - laptop_FPGA.payload.bin
   - laptop_MCU.offer.bin
@@ -118,15 +116,15 @@ In this approach, there is one driver package per CFU capable device. The packag
 
 - Monolithic Package for a dock device
   - DockFirmwareUpdate.inf
-  - DockFirmwareUpdatePackage.dll
+  - DockFirmwareUpdate.dll
   - Dock_Audio.offer.bin
   - Dock_Audio.payload.bin
   - Dock_MCU.offer.bin
   - Dock_MCU.payload.bin
 
-- Monolithic Package for Contoso Mouse
+- Monolithic Package for components of a Laptop
   - LaptopMCUFirmwareUpdate.inf
-  - LaptopMCUFirmwareUpdatePackage.dll
+  - LaptopMCUFirmwareUpdate.dll
   - laptop_FPGA.offer.bin
   - laptop_FPGA.payload.bin
   - laptop_MCU.offer.bin
