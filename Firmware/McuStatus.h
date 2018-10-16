@@ -1,26 +1,26 @@
 /*++
     This file is part of Component Firmware Update (CFU), licensed under
-	the MIT License (MIT).
+    the MIT License (MIT).
 
-	Copyright (c) Microsoft Corporation. All rights reserved.
+    Copyright (c) Microsoft Corporation. All rights reserved.
 
-	Permission is hereby granted, free of charge, to any person obtaining a copy
-	of this software and associated documentation files (the "Software"), to deal
-	in the Software without restriction, including without limitation the rights
-	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-	copies of the Software, and to permit persons to whom the Software is
-	furnished to do so, subject to the following conditions:
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
 
-	The above copyright notice and this permission notice shall be included in all
-	copies or substantial portions of the Software.
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
 
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-	SOFTWARE.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
 
 Module Name:
 
@@ -112,8 +112,8 @@ typedef enum // MCU_STATUS
     MCU_STATUS_TIMED_OUT                    = MAKE_MCU_STATUS(SEVERITY_CODE_ERROR,   MCU_STATUS_MODULE_GENERAL, 0x24UL),
 
     // MCU_STATUS_MODULE_CFU
-	// Supplied below are common flash/NVM error codes.
-	// Developer TODO - modify to your implementation specifics
+    // Supplied below are common flash/NVM error codes.
+    // Developer TODO - modify to your implementation specifics
     MCU_STATUS_CFU_FLASH_FAIL               = MAKE_MCU_STATUS(SEVERITY_CODE_ERROR,   MCU_STATUS_MODULE_CFU, 0x01UL),
     MCU_STATUS_CFU_FLSH_INVALID_SIZE        = MAKE_MCU_STATUS(SEVERITY_CODE_ERROR,   MCU_STATUS_MODULE_CFU, 0x02UL),
     MCU_STATUS_CFU_FLSH_NULL_VALUE          = MAKE_MCU_STATUS(SEVERITY_CODE_ERROR,   MCU_STATUS_MODULE_CFU, 0x03UL),
@@ -141,7 +141,7 @@ typedef enum // MCU_STATUS
     MCU_STATUS_CFU_NO_PENDING_BLOCK         = MAKE_MCU_STATUS(SEVERITY_CODE_ERROR,   MCU_STATUS_MODULE_CFU, 0x19UL),
     MCU_STATUS_CFU_NOT_OPEN_FOR_WRITE       = MAKE_MCU_STATUS(SEVERITY_CODE_ERROR,   MCU_STATUS_MODULE_CFU, 0x1AUL),
     MCU_STATUS_CFU_BAD_BLOCK_INDEX          = MAKE_MCU_STATUS(SEVERITY_CODE_ERROR,   MCU_STATUS_MODULE_CFU, 0x1BUL),
-	
+    
 } MCU_STATUS;
 
 //****************************************************************************

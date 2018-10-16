@@ -92,7 +92,7 @@ Environment:
 //                                  TYPEDEFS
 //
 //****************************************************************************
-// supress the warning about bit fields for only signed and unsigned ints
+// Suppress the warning about bit fields for only signed and unsigned integers.
 //#pragma diag_suppress=Pm095
 #pragma pack(1)
 typedef struct
