@@ -1,0 +1,50 @@
+/*++
+
+    Copyright (C) Microsoft Corporation.  All Rights Reserved.
+    Licensed under the MIT license.
+
+Module Name:
+
+    "SurfaceCFUOverHid.rc
+
+Abstract:
+
+    This module describes the resources for the driver
+
+Environment:
+
+    User-Mode Driver Framework 2.0
+
+--*/
+
+#include <windows.h>
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "ComponentFirmwareUpdate Device"
+#define VER_INTERNALNAME_STR        "ComponentFirmwareUpdate.dll"
+#define VER_ORIGINALFILENAME_STR    "ComponentFirmwareUpdate.dll"
+
+#define VER_FILEVERSION        1,0,0,0
+#define VER_FILEVERSION_STR    "1.0.0.0"
+
+#undef  VER_PRODUCTVERSION
+#define VER_PRODUCTVERSION     VER_FILEVERSION
+
+#undef  VER_PRODUCTVERSION_STR
+#define VER_PRODUCTVERSION_STR VER_FILEVERSION_STR
+
+#define VER_LEGALCOPYRIGHT_STR "(C) Microsoft. All rights reserved."
+#ifdef  VER_COMPANYNAME_STR
+
+#undef  VER_COMPANYNAME_STR
+#define VER_COMPANYNAME_STR    "Your Company"
+#endif
+
+#undef  VER_PRODUCTNAME_STR
+#define VER_PRODUCTNAME_STR    "Your Product"
+
+#include "common.ver"
+
