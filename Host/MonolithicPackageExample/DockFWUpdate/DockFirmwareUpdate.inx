@@ -19,9 +19,6 @@ PnPLockDown=1
 [SourceDisksNames]
 1 = %DiskName%
 
-[SourceDisksFiles]
-DockFirmwareUpdate.dll=1
-
 [Manufacturer]
 %ManufacturerName%=Standard,NT$ARCH$
 
@@ -54,6 +51,7 @@ Dock_MCU.offer.bin=1
 Dock_MCU.payload.bin=1 
 Dock_Audio.offer.bin=1 
 Dock_Audio.payload.bin=1 
+DockFirmwareUpdate.dll=1
 
 [DockFirmwareUpdate.CopyFiles]
 Dock_MCU.offer.bin 
