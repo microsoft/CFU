@@ -49,6 +49,7 @@ Environment:
 //                                  DEFINES
 //
 //****************************************************************************
+// NOTE - defines should match CFU Protocol Spec definitions
 #define CFU_OFFER_METADATA_INFO_CMD                        (0xFF)
 #define CFU_SPECIAL_OFFER_CMD                              (0xFE)
 #define CFU_SPECIAL_OFFER_GET_STATUS                       (0x03)
@@ -205,7 +206,7 @@ typedef struct
 typedef enum
 {
     BSP_YOURCOMPONENT      = (0x01U),
-    // BSP Add more platform component ID's here
+    // Developer TODO - Add more platform component ID's here
 } FWUPDATE_PFID;
 
 #pragma pack()

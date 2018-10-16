@@ -39,6 +39,10 @@ Environment:
 #ifndef CORETYPES_H
 #define CORETYPES_H
 
+
+// Supplied below are common definitions of embedded types
+// Developer TODO - modify to your implementation needs.
+
 //****************************************************************************
 //                                  DEFINES
 //****************************************************************************

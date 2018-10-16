@@ -8,6 +8,9 @@
  Each CFU submission (each CFU Offer and Content pair) is required to be created off-line before the submission is sent to the 
  firmware that implements the CFU process.
  
+ The generic, implementation agnostic common code for CFU is contained in ComponentFwUpdate.c. All other files are helper files 
+ that can be updated / modified to the developers unique implementation.
+
  # Creating the Offer and Content
  
  # The Offer and Content parts 
