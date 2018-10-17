@@ -20,7 +20,7 @@ DriverVer= ;
 %ManufacturerName%=Standard,NT$ARCH$
 
 [Standard.NT$ARCH$]
-%LaptopMCUFirmwareUpdate.ExtensionDesc%=LaptopMCUFirmwareUpdate, HID\.... ; Your HardwareID for Laptop MCU
+%LaptopMCUFirmwareUpdate.ExtensionDesc%=LaptopMCUFirmwareUpdate, HID\VID_045E&UP:FF09_U:0100 ; Your HardwareID for Laptop MCU
 
 [LaptopMCUFirmwareUpdate.NT]
 CopyFiles=LaptopMCUFirmwareUpdate.CopyFiles
@@ -45,28 +45,22 @@ HKR,,FriendlyName,,%FwUpdateFriendlyName%
 ; You can change subkey name under CFU (e.g. "Laptop_MCU"), and specify your own offer 
 ; (e.g. "Laptop_MCU.offer.bin") and payload (e.g "Laptop_MCU.payload.bin") file name.
 ;
-HKR,CFU\Laptop_MCU, Offer,   0x00000000, %13%\Laptop_MCU.offer.bin 
-HKR,CFU\Laptop_MCU, Payload, 0x00000000, %13%\Laptop_MCU.payload.bin 
-HKR,CFU\Laptop_FPGA,Offer,   0x00000000, %13%\Laptop_FPGA.offer.bin 
-HKR,CFU\Laptop_FPGA,Payload, 0x00000000, %13%\Laptop_FPGA.payload.bin 
-HKR,CFU\Laptop_TCPM,Offer,   0x00000000, %13%\Laptop_TCPM.offer.bin 
-HKR,CFU\Laptop_TCPM,Payload, 0x00000000, %13%\Laptop_TCPM.payload.bin 
+HKR,CFU\Contoso_Mouse, Offer,        0x00000000, %13%\Contoso_Mouse.offer.bin 
+HKR,CFU\Contoso_Mouse, Payload,      0x00000000, %13%\Contoso_Mouse.payload.bin 
+HKR,CFU\Contoso_Mouse_Wheel,Offer,   0x00000000, %13%\Contoso_Mouse_Wheel.offer.bin 
+HKR,CFU\Contoso_Mouse_Wheel,Payload, 0x00000000, %13%\Contoso_Mouse_Wheel.payload.bin 
 
 [SourceDisksFiles]
-Laptop_MCU.offer.bin=1 
-Laptop_MCU.payload.bin=1 
-Laptop_FPGA.offer.bin=1 
-Laptop_FPGA.payload.bin=1 
-Laptop_TCPM.offer.bin=1 
-Laptop_TCPM.payload.bin=1 
+Contoso_Mouse.offer.bin=1 
+Contoso_Mouse.payload.bin=1 
+Contoso_Mouse_Wheel.offer.bin=1 
+Contoso_Mouse_Wheel.payload.bin=1 
 
 [LaptopMCUFirmwareUpdate.CopyFiles]
-Laptop_MCU.offer.bin 
-Laptop_MCU.payload.bin 
-Laptop_FPGA.offer.bin 
-Laptop_FPGA.payload.bin 
-Laptop_TCPM.offer.bin 
-Laptop_TCPM.payload.bin 
+Contoso_Mouse.offer.bin 
+Contoso_Mouse.payload.bin 
+Contoso_Mouse_Wheel.offer.bin 
+Contoso_Mouse_Wheel.payload.bin 
 
 ; =================== Generic ==================================
 
