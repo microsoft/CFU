@@ -1,6 +1,6 @@
 # CFU Driver Sample
 
-The CFU driver sample sends firmware image file(s) to a device in need of an update. Before sending the firmware image, the driver sends several commands to the device with firmware offers. Only if the device accepts, the driver sends the firmware payload. The communication between the driver and the device is in accordance with the [CFU protocol](../Documentation/CFU-Protocol), an open source specification (included with CFU) based on the HID protocol.
+The CFU driver sample sends firmware image file(s) to a device in need of an update. Before sending the firmware image, the driver sends several commands to the device with firmware offers. Only if the device accepts, the driver sends the firmware payload. The communication between the driver and the device is in accordance with the [CFU protocol](../../Documentation/CFU-Protocol), an open source specification (included with CFU) based on the HID protocol.
 
 Consider these example devices in need of firmware updates, a laptop and dock device. The laptop has a primary component - the MCU, and two sub-components FPGA and TCPM.
 The dock device with a primary component - the MCU and another sub-component for audio.
@@ -18,7 +18,7 @@ The sample can be deployed using one of two approaches:
 The driver package for the CFU driver sample includes examples for both those approaches.
 
 The CFU driver sample is implemented using the [User-Mode Driver Framework](https://docs.microsoft.com/en-us/windows-hardware/drivers/wdf/overview-of-the-umdf) 2.0 model and based on the the [Microsoft Devices Driver Module Framework (DMF)](https://blogs.windows.com/buildingapps/2018/08/15/introducing-driver-module-framework/).
-As a firmware developer, you can customize the driver for the purposes of adopting the CFU model to enable firmware updates for your component(s). For more information, see [Customizing the Component Firmware Update Driver](../Documentation/CFU-Driver/cfu-driver.md).
+As a firmware developer, you can customize the driver for the purposes of adopting the CFU model to enable firmware updates for your component(s). For more information, see [Customizing the Component Firmware Update Driver](../../Documentation/CFU-Driver/cfu-driver.md).
 
 ## File Manifest
 
@@ -56,4 +56,4 @@ You can change the default configuration to build for your version of the operat
 5. From the Build menu, click **Build** Solution (Ctrl+Shift+B).
 
 ## See Also
-[Customizing the Component Firmware Update Driver](../Documentation/CFU-Driver/cfu-driver.md)
+[Customizing the Component Firmware Update Driver](../../Documentation/CFU-Driver/cfu-driver.md)
