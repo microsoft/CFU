@@ -2,8 +2,8 @@
 
 The Microsoft Devices team has announced the release of an open-source model to update the firmware of peripheral devices– Component Firmware Update (CFU). The solution allows seamless and secure firmware update for components connected through interconnect buses such as USB, Bluetooth, I<sup>2</sup>C, etc. As part of the open-source effort, we are sharing a CFU protocol specification, sample CFU driver, and firmware sample code to allow device manufacturers to push firmware updates over Windows Update.
 
-- The sample CFU driver is a UMDF driver that talks to the device using the HID protocol. As a firmware developer, you can customize the driver for the purposes of adopting the CFU model to enable firmware updates for your component(s). Source: [CFU Driver](https://github.com/Microsoft/CFU/blob/edits-p/Host/README.MD).
-- CFU protocol specification describes a generic HID protocol to update firmware for components present on a PC or accessories. The specification allows for a component to accept firmware without interrupting the device operation during a download. Specification: [Component Firmware Update Protocol Specification](../Documentation/CFU-Protocol)
+- The sample CFU driver is a UMDF driver that talks to the device using the HID protocol. As a firmware developer, you can customize the driver for the purposes of adopting the CFU model to enable firmware updates for your component(s). Source: [CFU Driver](https://github.com/Microsoft/CFU/blob/master/Host/README.MD).
+- CFU protocol specification describes a generic HID protocol to update firmware for components present on a PC or accessories. The specification allows for a component to accept firmware without interrupting the device operation during a download. Specification: [Component Firmware Update Protocol Specification](https://github.com/Microsoft/CFU/tree/master/Documentation/CFU-Protocol)
 - The sample firmware code: [CFU Firmware](../../Firmware/CFUEngineeringGuide.md).
 
 - [Customizing the Component Firmware Update Driver](#customizing-the-component-firmware-update-driver)
@@ -30,8 +30,8 @@ The Microsoft Devices team has announced the release of an open-source model to 
 Familiarize yourself with the CFU protocol.
 
 - [Blog: Introducing Component Firmware Update](https://blogs.windows.com/buildingapps/2018/08/15/introducing-driver-module-framework/)
-- [Component Firmware Update Protocol Specification]()
-- [Github Resources](../../Readme.md)
+- [Component Firmware Update Protocol Specification](https://github.com/Microsoft/CFU/tree/master/Documentation/CFU-Protocol)
+- [Github Resources](https://github.com/Microsoft/CFU/tree/master)
 
 ## Overview
 
@@ -93,7 +93,7 @@ Base package and extensions packages are serviced independently.
   - laptop_TCPM.offer.bin
   - laptop_TCPM.payload.bin
 
-Reference sample: [ComponentizedPackageExample](../../Host/ComponentizedPackageExample/)
+Reference sample: [ComponentizedPackageExample](https://github.com/Microsoft/CFU/tree/master/Host/ComponentizedPackageExample)
 
 ****
 
@@ -133,7 +133,7 @@ In this approach, there is one driver package per CFU capable device. The packag
   - laptop_TCPM.payload.bin
 
 
-Reference sample: [MonolithicPackageExample](../../Host/MonolithicPackageExample)
+Reference sample: [MonolithicPackageExample](https://github.com/Microsoft/CFU/tree/master/Host/MonolithicPackageExample)
 
 ### 2. Configure the CFU driver INF
 The sample CFU driver is extensible. To tune the driver’s behavior, change the driver INF instead of the source code.
@@ -188,7 +188,7 @@ Windows ensures that the driver is loaded when the component is enumerated on th
    - For the multiple package approach, update the extension INF for each component with information about your firmware files.
    - For a monolithic package approach, update the INF file for the device.
 
-4. Update the **SourceDisksFiles** and **CopyFiles** sections to reflect all the firmware files. To see an example, see [DockFirmwareUpdate.inx](../../Host/ComponentizedPackageExample/DockFWUpdate/DockFirmwareUpdate.inx)
+4. Update the **SourceDisksFiles** and **CopyFiles** sections to reflect all the firmware files. To see an example, see [DockFirmwareUpdate.inx](https://github.com/Microsoft/CFU/blob/master/Host/ComponentizedPackageExample/DockFWUpdate/DockFirmwareUpdate.inx)
 
 **Note** When the package(s) gets installed, the OS replaces the `%13%` with the full path to the files before creating the registry values. Thus, the driver able to enumerate the registry and identify all the firmware image and offer files.
 
@@ -205,13 +205,13 @@ Windows ensures that the driver is loaded when the component is enumerated on th
 
 1. The CFU driver sample uses [WPP Software Tracing](https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/wpp-software-tracing) for diagnostics. Update the trace with you own GUID to ensure that you can capture the WPP traces for your customized driver.
 
-     Reference sample: [Trace.h](../../Host/ComponentFirmwareUpdateDriver/Trace.h)
+     Reference sample: [Trace.h](https://github.com/Microsoft/CFU/blob/master/Host/ComponentFirmwareUpdateDriver/Trace.h)
 
 2. Update the EVENTLOG Provider in Device.h
 
    ```EVENTLOG_PROVIDER_NAME L"SampleProvider"```
 
-   Reference sample: [Device.h](../../Host/ComponentFirmwareUpdateDriver/Device.h)
+   Reference sample: [Device.h](https://github.com/Microsoft/CFU/blob/master/Host/ComponentFirmwareUpdateDriver/Device.h)
 
 3. Specify the Report IDs that the driver uses.
     
