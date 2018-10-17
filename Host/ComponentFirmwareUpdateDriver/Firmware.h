@@ -9,7 +9,13 @@ Module Name:
 
 Abstract:
 
+<<<<<<< HEAD
    Companion file to Firmware.h.
+=======
+
+   Companion file to Firmware.c.
+
+>>>>>>> master
     
 Environment:
 
