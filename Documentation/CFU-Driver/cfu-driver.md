@@ -32,7 +32,6 @@ Familiarize yourself with the CFU protocol.
 
 - [Blog: Introducing Component Firmware Update](https://blogs.windows.com/buildingapps/2018/08/15/introducing-driver-module-framework/)
 - [Component Firmware Update Protocol Specification](https://github.com/Microsoft/CFU/tree/master/Documentation/CFU-Protocol)
-- [Component Firmware Update Protocol Specification]()
 - [Github Resources](https://github.com/Microsoft/CFU/tree/)
 
 ## Overview
@@ -94,7 +93,6 @@ Base package and extensions packages are serviced independently.
   - laptop_MCU.payload.bin
   - laptop_TCPM.offer.bin
   - laptop_TCPM.payload.bin
-
 
 Reference sample: [ComponentizedPackageExample](https://github.com/Microsoft/CFU/tree/master/Host/ComponentizedPackageExample)
 
@@ -196,13 +194,11 @@ Windows ensures that the driver is loaded when the component is enumerated on th
     HKR,CFU\\_Dock_Audio_Sub_,Payload, 0x00000000, %13%\\_Dock_Audio.payload.bin_
     
    - For the multiple package approach, update the extension INF for each component with information about your firmware files.
-
    - For a monolithic package approach, update the INF file for the device.
 
 4. Update the **SourceDisksFiles** and **CopyFiles** sections to reflect all the firmware files. To see an example, see [DockFirmwareUpdate.inx](https://github.com/Microsoft/CFU/blob/master/Host/ComponentizedPackageExample/DockFWUpdate/DockFirmwareUpdate.inx)
 
 **Note** When the package(s) gets installed, the OS replaces the `%13%` with the full path to the files before creating the registry values. Thus, the driver able to enumerate the registry and identify all the firmware image and offer files.
-
 
 5. Specify device capabilities in the INF.
 
@@ -211,7 +207,6 @@ Windows ensures that the driver is loaded when the component is enumerated on th
    For example, the sample driver requires information about the underlying bus protocol to which the device is connected. The protocol can be specified through registry settings.
 
    For the multiple package approach, device capabilities is specified in the device specific firmware file, and for a monolith package approach it is specified in the main INF file for the package.
-
 
 
 ### 3. Configure the diagnostic capabilities
@@ -226,8 +221,6 @@ Windows ensures that the driver is loaded when the component is enumerated on th
 
    Reference sample: [Device.h](https://github.com/Microsoft/CFU/blob/master/Host/ComponentFirmwareUpdateDriver/Device.h)
 
-
-3. Specify the Report IDs that the driver uses.
     
     ```
     #define REPORT_ID_FW_VERSION_FEATURE      0x20
