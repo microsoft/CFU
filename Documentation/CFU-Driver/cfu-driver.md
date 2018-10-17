@@ -30,7 +30,7 @@ The Microsoft Devices team has announced the release of an open-source model to 
 
 Familiarize yourself with the CFU protocol.
 
-- [Blog: Introducing Driver Module Framework](https://blogs.windows.com/buildingapps/2018/10/17/introducing-component-firmware-update)
+- [Blog: Introducing Component Update Framework](https://blogs.windows.com/buildingapps/2018/10/17/introducing-component-firmware-update)
 - [Component Firmware Update Protocol Specification](https://github.com/Microsoft/CFU/tree/master/Documentation/CFU-Protocol)
 - [Github Resources](https://github.com/Microsoft/CFU)
 
