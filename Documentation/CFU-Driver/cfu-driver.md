@@ -8,7 +8,7 @@ The Microsoft Devices team has announced the release of an open-source model to 
 - The sample firmware code: [CFU Firmware](https://github.com/Microsoft/CFU/blob/master/Firmware/CFUEngineeringGuide.md).
 
 - [Customizing the Component Firmware Update Driver](#customizing-the-component-firmware-update-driver)
-    - [Before you begin ...](#before-you-begin)
+    - [Before you begin](#before-you-begin)
     - [Overview](#overview)
     - [Customize the CFU driver sample](#customize-the-cfu-driver-sample)
         - [1. Choose a deployment approach](#1-choose-a-deployment-approach)
@@ -26,13 +26,13 @@ The Microsoft Devices team has announced the release of an open-source model to 
     - [FAQ](#faq)
     - [Appendix](#appendix)
 
-## Before you begin ... 
+## Before you begin
 
 Familiarize yourself with the CFU protocol.
 
-- [Blog: Introducing Component Firmware Update](https://blogs.windows.com/buildingapps/2018/08/15/introducing-driver-module-framework/)
+- [Blog: Introducing Driver Module Framework](https://blogs.windows.com/buildingapps/2018/10/17/introducing-component-firmware-update)
 - [Component Firmware Update Protocol Specification](https://github.com/Microsoft/CFU/tree/master/Documentation/CFU-Protocol)
-- [Github Resources](https://github.com/Microsoft/CFU/tree/)
+- [Github Resources](https://github.com/Microsoft/CFU)
 
 ## Overview
 
