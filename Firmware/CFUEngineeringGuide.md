@@ -61,8 +61,12 @@ From low address to high address, the first byte of the Offer is a segment numbe
 |  15:0 7:3  2:0  7:6  5:4  3:0   31:0   31:0     7:0  7:0  7:7  6:6  5:0  7:0 |
 |  PI | R1 | MS | R0 | BK | PR  | VM   | VN   |   TK | CI | FV | FR | R0 | SN  |
 +================================-=============================================+
+```
+
 
 From high address to low address:
+
+```
 
 Byte(s)    Value
 ---------------------------------------------------------
