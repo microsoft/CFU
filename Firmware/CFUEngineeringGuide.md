@@ -61,24 +61,28 @@ From low address to high address, the first byte of the Offer is a segment numbe
 |  15:0 7:3  2:0  7:6  5:4  3:0   31:0   31:0     7:0  7:0  7:7  6:6  5:0  7:0 |
 |  PI | R1 | MS | R0 | BK | PR  | VM   | VN   |   TK | CI | FV | FR | R0 | SN  |
 +================================-=============================================+
+```
+
 
 From high address to low address:
+
+```
 
 Byte(s)    Value
 ---------------------------------------------------------
 15:14   |  (PI)  Product ID is 2 bytes
 13      |  (R1)  Reserved1 5-bit register
-       |  (MS)  Milestone 3-bit register
+        |  (MS)  Milestone 3-bit register
 12      |  (R2)  Reserved2 2-bit register
-       |  (BK)  Bank 2-bit register
-       |  (PR)  Protocol Revision  2-bit register
+        |  (BK)  Bank 2-bit register
+        |  (PR)  Protocol Revision  2-bit register
 11:8    |  (VM)  Hardware Variant Mask 32-bit register
 7:4     |  (VN)  Version 32-bit register
 3       |  (TK)  Token byte 8-bit register
 2       |  (CI)  Component ID 8-bit register
 1       |  (FV)  Force version bit  1-bit register
-       |  (FR)  Force Immediate Reset  1-bit register
-       |  (R0)  Reserved0 6-bit register
+        |  (FR)  Force Immediate Reset  1-bit register
+        |  (R0)  Reserved0 6-bit register
 0       |  (SN)  Segment Number 8-bit register
 ---------------------------------------------------------
 
