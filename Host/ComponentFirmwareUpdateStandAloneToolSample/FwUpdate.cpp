@@ -173,6 +173,11 @@ Return Value:
         pInterface += (wcslen(pInterface) + 1);
     }
 
+    if (VectorInterfaces.size() != 0)
+    {
+        hr = S_OK;
+    }
+
 Exit:
 
     if (pInterfaceList)
@@ -224,7 +229,7 @@ Return Value:
         if (!wcsstr(DevicePath, vidPidFilterString))
         {
             //The device found doesn't match the vid and pid
-            wprintf(L"The dCS_E_PACKAGE_NOTFOUND;evice found does not match the VID/PID\n");
+            //wprintf(L"The device found does not match the VID/PID\n");
             hr = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
             goto Exit;
 
