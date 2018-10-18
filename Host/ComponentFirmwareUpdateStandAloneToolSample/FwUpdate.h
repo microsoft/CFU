@@ -1,27 +1,45 @@
-//Copyright(c) Microsoft Corporation.All rights reserved.
-//
-//Permission is hereby granted, free of charge, to any person obtaining a copy
-//of this software and associated documentation files(the "Software"), to deal
-//in the Software without restriction, including without limitation the rights
-//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//copies of the Software, and to permit persons to whom the Software is
-//furnished to do so, subject to the following conditions :
-//
-//The above copyright notice and this permission notice shall be included in all
-//copies or substantial portions of the Software.
-//
-//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
-//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//SOFTWARE
+/*++
+    MIT License
+    
+    Copyright (C) Microsoft Corporation. All rights reserved.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+
+
+Module Name:
+
+    FwUpdate.h
+
+Abstract:
+    
+    This module implements the Component Firmware Update (CFU) 
+    protocol for updating a device's firmware image.
+
+Environment:
+
+    User mode.
+
+--*/
 
 #pragma once
 
 #include <vector>
-
+#include <assert.h>
 #define MAX_HID_CONTENT_PAYLOAD 52
 
 class FwUpdateCfu
@@ -91,21 +109,26 @@ public:
         Tracks milestones/branches. Manually updated by product team.
         The normal process when a new release branch is created:
         -New release branch inherits the current version from the 'master' branch.
-        -In the 'master' branch, this Major field is updated and Build field is reset to 0 to track the next "in-development" release.
+        -In the 'master' branch, this Major field is updated and Build field is 
+        reset to 0 to track the next "in-development" release.
 
         Example if 'master' version number is 8.15.0, then
         -The new release branch will inherit 8.15.0
         -The new build in the 'master' branch will be updated to 9.0.0
 
         Minor:
-        Indicates one instance of build execution. Automatically updated by the build system or manually reset to 0 when manually increasing the Major field.
-        For example in the auto-update scenario, if the prior component version was 13.155.* the build system will update it to 13.156.*
+        Indicates one instance of build execution. Automatically updated by the build 
+        system or manually reset to 0 when manually increasing the Major field.
+        For example in the auto-update scenario, if the prior component version was 
+        13.155.* the build system will update it to 13.156.*
 
         Variant:
         Indicates the variant (aka flavor) of the component build.
         Automatically updated by the build system.
 
-        For example, if the Major and Build fields are 13.155.* the "Debug Unsigned" build version will be 13.155.0, and the "Release AttestationSigned" build version will be 13.155.138
+        For example, if the Major and Build fields are 13.155.* the "Debug Unsigned" 
+        build version will be 13.155.0, and the "Release AttestationSigned" 
+        build version will be 13.155.138
         */
     }_VersionFormat;
 
@@ -265,7 +288,11 @@ public:
             MAKE_STRING_CASE(FIRMWARE_UPDATE_OFFER_BUSY);
             MAKE_STRING_CASE(FIRMWARE_UPDATE_OFFER_COMMAND_READY);
             MAKE_STRING_CASE(FIRMWARE_UPDATE_CMD_NOT_SUPPORTED);
-        default: return L"UNKNOWN_FIRMWARE_UPDATE_OFFER_STATUS";
+            default: 
+            {
+                assert(FALSE);
+                return L"UNKNOWN_FIRMWARE_UPDATE_OFFER_STATUS";
+            }
         }
     }
 
@@ -282,7 +309,11 @@ public:
             MAKE_STRING_CASE(FIRMWARE_OFFER_REJECT_MILESTONE);
             MAKE_STRING_CASE(FIRMWARE_OFFER_REJECT_INV_PCOL_REV);
             MAKE_STRING_CASE(FIRMWARE_OFFER_REJECT_VARIANT);
-        default: return L"UNKNOWN_REJECT_REASON";
+            default: 
+            {
+                assert(FALSE);
+                return L"UNKNOWN_REJECT_REASON";
+            }
         }
     }
 
@@ -329,7 +360,11 @@ public:
             MAKE_STRING_CASE(FIRMWARE_UPDATE_ERROR_INVALID_ADDR);
             MAKE_STRING_CASE(FIRMWARE_UPDATE_ERROR_NO_OFFER);
             MAKE_STRING_CASE(FIRMWARE_UPDATE_ERROR_INVALID);
-        default: return L"UNKNOWN_CONTENT_RESPONSE";
+            default: 
+            {
+                assert(FALSE);
+                return L"UNKNOWN_CONTENT_RESPONSE";
+            }
         }
     }
 
@@ -340,18 +375,35 @@ public:
     }PathAndVersion;
 
 public:
+    
+    _Check_return_
     static FwUpdateCfu* GetInstance();
 
-    bool RetrieveDevicesWithVersions(
-        _Out_ vector<PathAndVersion>& vectorInterfaces,
-        _In_ CfuHidDeviceConfiguration& protocolSettings);
+    _Check_return_
+    HRESULT
+    RetrieveDevicesWithVersions(_Out_ vector<PathAndVersion>& VectorInterfaces,
+                                _In_ CfuHidDeviceConfiguration& VrotocolSettings);
 
-    bool GetVersion(_In_ PCWSTR DevicePath, _Out_ VersionReport& versionReport, _In_ CfuHidDeviceConfiguration& protocolSettings);
+    _Check_return_
+    HRESULT
+    GetVersion(_In_z_ PCWSTR DevicePath, 
+               _Out_  VersionReport& VersionReport, 
+               _In_   CfuHidDeviceConfiguration& ProtocolSettings);
     
-    //Capable of updating device with offer.bin and srec.bin files
-    bool FwUpdateOfferSrec(_In_ CfuHidDeviceConfiguration& protocolSettings, _In_ const TCHAR* offerPath, _In_ const TCHAR* srecBinPath, _In_ PCWSTR DevicePath, _In_ uint8_t forceIgnoreVersion, _In_ uint8_t forceReset);
+    //
+    // Capable of updating device with offer.bin and srec.bin files
+    // 
+    _Check_return_
+    bool 
+    FwUpdateOfferSrec(_In_ CfuHidDeviceConfiguration& ProtocolSettings, 
+                      _In_z_ const TCHAR* OfferPath, 
+                      _In_z_ const TCHAR* SrecBinPath, 
+                      _In_z_ PCWSTR DevicePath, 
+                      _In_ uint8_t ForceIgnoreVersion, 
+                      _In_ uint8_t ForceReset);
 
 private:
+
     FwUpdateCfu() noexcept :
         mForceIgnoreVersion(false),
         readEvent(INVALID_HANDLE_VALUE),

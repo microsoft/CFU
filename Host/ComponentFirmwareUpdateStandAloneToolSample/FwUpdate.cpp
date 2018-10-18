@@ -1,22 +1,40 @@
-//Copyright(c) Microsoft Corporation.All rights reserved.
-//
-//Permission is hereby granted, free of charge, to any person obtaining a copy
-//of this software and associated documentation files(the "Software"), to deal
-//in the Software without restriction, including without limitation the rights
-//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//copies of the Software, and to permit persons to whom the Software is
-//furnished to do so, subject to the following conditions :
-//
-//The above copyright notice and this permission notice shall be included in all
-//copies or substantial portions of the Software.
-//
-//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
-//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//SOFTWARE
+/*++
+    MIT License
+    
+    Copyright (C) Microsoft Corporation. All rights reserved.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+
+
+Module Name:
+
+    FwUpdate.cpp
+
+Abstract:
+    
+    This module implements the Component Firmware Update (CFU) 
+    protocol for updating a device's firmware image.
+
+Environment:
+
+    User mode.
+
+--*/
 
 #include <string>
 #include <iostream>
@@ -31,30 +49,69 @@
 #include "FwUpdate.h"
 #include "SrecParser.h"
 
-#define GOTO_FW_UPDATE_EXIT {ret = false; goto Exit;}
 FwUpdateCfu* FwUpdateCfu::mpFwUpdateCfu = nullptr;
 
+_Check_return_
 FwUpdateCfu* FwUpdateCfu::GetInstance()
+/*++
+
+Routine Description:
+
+    Creates an instance of the CFU singleton object if it does not exits.
+
+Arguments:
+    
+
+Return Value:
+
+  Pointer to the CFU object, or NULL on failure.
+
+--*/
 {
     if (!mpFwUpdateCfu)
     {
-        mpFwUpdateCfu = new FwUpdateCfu();
+        mpFwUpdateCfu = new (std::nothrow) FwUpdateCfu();
     }
 
     return mpFwUpdateCfu;
-}
+}// GetInstance()
 
-bool FwUpdateCfu::RetrieveDevicesWithVersions(
-    _Out_ vector<PathAndVersion>& vectorInterfaces,
-    _In_ CfuHidDeviceConfiguration& protocolSettings)
+
+_Check_return_
+HRESULT
+FwUpdateCfu::RetrieveDevicesWithVersions(_Out_ vector<PathAndVersion>& VectorInterfaces,
+                                         _In_ CfuHidDeviceConfiguration& ProtocolSettings)
+/*++
+
+Routine Description:
+
+    Attempts to retrieve the device path and version given a specified 
+    configuration.
+
+Arguments:
+    
+    VectorInterfaces -- The list of devices if found.
+    
+    ProtocolSettings -- The Vendor ID (VID), Product ID (PID), HID usage page
+                        and Top Level Collection (TLC) of the device.
+
+Return Value:
+
+  S_OK on success or underlying failure code.
+
+--*/
 {
+    HRESULT hr = S_OK;
     GUID deviceInterface;
     CONFIGRET cr;
     PWCHAR pInterfaceList = nullptr;
     PWCHAR pInterface = nullptr;
-    vectorInterfaces.clear();
+    VectorInterfaces.clear();
+    VersionReport version = { 0 };
 
-    //Get list of installed HID devices
+    //
+    // Get list of installed HID devices.
+    // 
     HidD_GetHidGuid(&deviceInterface);
     ULONG numCharacters = 0;
     cr = CM_Get_Device_Interface_List_SizeW(
@@ -64,14 +121,18 @@ bool FwUpdateCfu::RetrieveDevicesWithVersions(
         CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
     if (cr != CR_SUCCESS)
     {
-        return FALSE;
+        hr = HRESULT_FROM_WIN32(cr);
+        goto Exit;
     }
 
-    //Get a list of the device interfaces
-    pInterfaceList = new WCHAR[numCharacters];
+    //
+    // Get a list of the device interfaces.
+    // 
+    pInterfaceList = new (std::nothrow) WCHAR[numCharacters];
     if (!pInterfaceList)
     {
-        return FALSE;
+        hr = E_OUTOFMEMORY;
+        goto Exit;
     }
 
     cr = CM_Get_Device_Interface_ListW(
@@ -80,62 +141,103 @@ bool FwUpdateCfu::RetrieveDevicesWithVersions(
         pInterfaceList,
         numCharacters,
         CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
+
     if (cr != CR_SUCCESS)
     {
-        delete[] pInterfaceList;
-        return FALSE;
+        hr = HRESULT_FROM_WIN32(cr);
+        goto Exit;
     }
 
-    //Walk and filter the device interface list based on who responds to a version query
-    VersionReport version = { 0 };
+    // 
+    // Walk and filter the device interface list based on who responds to a 
+    // version query.
+    // 
     pInterface = pInterfaceList;
     while (*pInterface != L'\0')
     {
-        if (GetVersion(pInterface, version, protocolSettings))
+        hr = GetVersion(pInterface, version, ProtocolSettings);
+        if (SUCCEEDED(hr))
         {
             PathAndVersion foundDeviceWithVersion = { wstring(pInterface),version };
 
-            wprintf(L"Found device %d:\n", (uint32_t)vectorInterfaces.size());
+            wprintf(L"Found device %d:\n", (uint32_t)VectorInterfaces.size());
             wprintf(L"Header 0x%08X\n", version.header);
-            wprintf(L"FwVersion %d.%d.%d\n", version.version.Major, version.version.Minor, version.version.Variant);
+            wprintf(L"FwVersion %d.%d.%d\n", version.version.Major, 
+                    version.version.Minor, version.version.Variant);
             wprintf(L"Property 0x%08X\n", version.property);
             wprintf(L"from device %s\n", pInterface);
 
-            vectorInterfaces.push_back(foundDeviceWithVersion);
+            VectorInterfaces.push_back(foundDeviceWithVersion);
         }
 
         pInterface += (wcslen(pInterface) + 1);
     }
 
-    delete[] pInterfaceList;
-    return !vectorInterfaces.empty();
-}
+Exit:
 
-bool FwUpdateCfu::GetVersion(_In_ PCWSTR DevicePath, _Out_ VersionReport& versionReport, _In_ CfuHidDeviceConfiguration& protocolSettings)
+    if (pInterfaceList)
+    { 
+        delete[] pInterfaceList;
+    }
+    
+    return hr;
+}//RetrieveDevicesWithVersions()
+
+_Check_return_
+HRESULT
+FwUpdateCfu::GetVersion(_In_z_ PCWSTR DevicePath,
+                        _Out_  VersionReport& VerReport,
+                        _In_   CfuHidDeviceConfiguration& ProtocolSettings)
+/*++
+
+Routine Description:
+
+    Given a path and configuration, get the version.
+
+Arguments:
+    
+    DevicePath       -- Path to the device.
+    VerReport        -- The list of devices if found.
+    ProtocolSettings -- The Vendor ID (VID), Product ID (PID), HID usage page
+                        and Top Level Collection (TLC) of the device.
+
+Return Value:
+
+  S_OK on success or underlying failure code.
+
+--*/
+
 {
     HID_DEVICE device;
-    NTSTATUS status;
-
+    NTSTATUS   status;
+    HRESULT    hr = S_OK;
+    device.hDevice = INVALID_HANDLE_VALUE;
+    
     //Check that the VID/PID matches.
     wchar_t vidPidFilterString[256];
-    memset(&versionReport, 0, sizeof(versionReport));
+    memset(&VerReport, 0, sizeof(VerReport));
 
-    if (protocolSettings.Vid && protocolSettings.Pid) //filter on both if both set
+    if (ProtocolSettings.Vid && ProtocolSettings.Pid) //filter on both if both set
     {
-        swprintf(vidPidFilterString, 256, L"VID_%04X&PID_%04X", protocolSettings.Vid, protocolSettings.Pid);
+        swprintf(vidPidFilterString, 256, L"VID_%04X&PID_%04X", 
+                 ProtocolSettings.Vid, ProtocolSettings.Pid);
         if (!wcsstr(DevicePath, vidPidFilterString))
         {
             //The device found doesn't match the vid and pid
-            return false;
+            wprintf(L"The dCS_E_PACKAGE_NOTFOUND;evice found does not match the VID/PID\n");
+            hr = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+            goto Exit;
+
         }
     }
     else //filter on vid only (vid is mandatory)
     {
-        swprintf(vidPidFilterString, 256, L"VID_%04X", protocolSettings.Vid);
+        swprintf(vidPidFilterString, 256, L"VID_%04X", ProtocolSettings.Vid);
         if (!wcsstr(DevicePath, vidPidFilterString))
         {
             //The device found doesn't match the vid
-            return false;
+            hr = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+            goto Exit;
         }
     }
 
@@ -151,14 +253,16 @@ bool FwUpdateCfu::GetVersion(_In_ PCWSTR DevicePath, _Out_ VersionReport& versio
     if (device.hDevice == INVALID_HANDLE_VALUE)
     {
         wprintf(L"INVALID_HANDLE_VALUE %s", DevicePath);
-        return false;
+        hr = HRESULT_FROM_WIN32(GetLastError());
+        goto Exit;
     }
 
     //Try to get the device's preparsed HID data.
     if (!HidD_GetPreparsedData(device.hDevice, &device.PreparsedData))
     {
         //wprintf(L"HidD_GetPreparsedData returned false on %s", DevicePath);
-        goto exit;
+        hr = HRESULT_FROM_WIN32(GetLastError());
+        goto Exit;
     }
 
     //Get device capabilities.
@@ -166,25 +270,29 @@ bool FwUpdateCfu::GetVersion(_In_ PCWSTR DevicePath, _Out_ VersionReport& versio
     if (!NT_SUCCESS(status))
     {
         wprintf(L"HidP_GetCaps status = %d, %s", status, DevicePath);
-        goto exit;
+        hr = HRESULT_FROM_WIN32(status);
+        goto Exit;
     }
 
     //Filter out hits for UsagePage
-    if (device.Caps.UsagePage != protocolSettings.UsagePage)
+    if (device.Caps.UsagePage != ProtocolSettings.UsagePage)
     {
-        goto exit;
+        hr = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+        goto Exit;
     }
 
     //Filter out hits for Usage Top Level Collection if set and not matched
-    if (protocolSettings.UsageTlc != 0 &&
-        device.Caps.Usage != protocolSettings.UsageTlc)
+    if (ProtocolSettings.UsageTlc != 0 &&
+        device.Caps.Usage != ProtocolSettings.UsageTlc)
     {
-        goto exit;
+        hr = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+        goto Exit;
     }
 
-    if (!HidCommands::PopulateReportId(device, protocolSettings.Reports[FwUpdateVersion]))
+    if (!HidCommands::PopulateReportId(device, ProtocolSettings.Reports[FwUpdateVersion]))
     {
-        goto exit;
+        hr = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+        goto Exit;
     }
 
     //Query device for "FeatureVersion" usage. If supported, get the version and return success.
@@ -192,42 +300,65 @@ bool FwUpdateCfu::GetVersion(_In_ PCWSTR DevicePath, _Out_ VersionReport& versio
     char reportBuffer[1024];
     uint32_t reportLengthRead = 0;
 
-    if (HidCommands::GetFeatureReport(device, protocolSettings.UsagePage, protocolSettings.Reports[FwUpdateVersion].Usage, reportBuffer, sizeof(reportBuffer), reportLengthRead))
+    if (HidCommands::GetFeatureReport(device, ProtocolSettings.UsagePage, 
+                                      ProtocolSettings.Reports[FwUpdateVersion].Usage, 
+                                      reportBuffer, 
+                                      sizeof(reportBuffer), 
+                                      reportLengthRead))
     {
         if (reportLengthRead < sizeof(VersionReport))
         {
             //invalid reportLength read
-            wprintf(L"Expected report length of %zu and got %u\n", sizeof(VersionReport), reportLengthRead);
-            goto exit;
+            wprintf(L"Expected report length of %zu and got %u\n", 
+                    sizeof(VersionReport), reportLengthRead);
+            hr = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+            goto Exit;
         }
-        versionReport = *reinterpret_cast<VersionReport*>(reportBuffer); //copy to output
 
-        CloseHandle(device.hDevice);
-        device.hDevice = INVALID_HANDLE_VALUE;
-        return true;
+        VerReport = *reinterpret_cast<VersionReport*>(reportBuffer); //copy to output
     }
 
-exit:
-    //Device didn't support the correct usages.
-    CloseHandle(device.hDevice);
-    device.hDevice = INVALID_HANDLE_VALUE;
-    return false;
-}
-
-bool FwUpdateCfu::FwUpdateOfferSrec(
-    _In_ CfuHidDeviceConfiguration& protocolSettings,
-    _In_ const TCHAR* offerPath, 
-    _In_ const TCHAR* srecBinPath,
-    _In_ PCWSTR DevicePath,
-    _In_ uint8_t forceIgnoreVersion, 
-    _In_ uint8_t forceReset)
-{
-    readEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-    if (!readEvent)
+Exit:
+    
+    if (device.hDevice != INVALID_HANDLE_VALUE)
     {
-        wprintf(L"Failed to create readEvent Handle\n");
-        return false;
+        CloseHandle(device.hDevice);
     }
+
+    return hr;
+}//GetVersion()
+
+_Check_return_
+bool 
+FwUpdateCfu::FwUpdateOfferSrec(
+    _In_   CfuHidDeviceConfiguration& ProtocolSettings,
+    _In_z_ const TCHAR* OfferPath, 
+    _In_z_ const TCHAR* SrecBinPath,
+    _In_z_ PCWSTR DevicePath,
+    _In_   uint8_t ForceIgnoreVersion, 
+    _In_   uint8_t ForceReset)
+/*++
+
+Routine Description:
+
+    Attempts to offer a firmware image to the device, and then
+    if the offer is accepted deliver the payload.
+
+Arguments:
+    
+    ProtocolSettings   -- Protocol settings.
+    OfferPath          -- Path to the offer input file.
+    SrecBinPath        -- Path to the firmware image.
+    DevicePath         -- Path to the device to open.
+    ForceIgnoreVersion -- Instructs the FW to bypass version checking if allowed/applicable.
+    ForceReset         -- Reset the device after fwupdate is complete if supported.
+
+Return Value:
+
+  S_OK on success or underlying failure code.
+
+--*/
+{
 
     HidCommands::READ_THREAD_CONTEXT  readContext;
     HANDLE     ReadThread = 0;
@@ -236,9 +367,19 @@ bool FwUpdateCfu::FwUpdateOfferSrec(
     bool ret = false;
     ifstream offerfilePathStream;
     ifstream filePathStream;
-
     OfferDataUnion offerDataUnion = { 0 };
     ContentData contentdata = { 0 };
+
+    readEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    if (!readEvent)
+    {
+        wprintf(L"Failed to create readEvent Handle\n");
+        goto Exit;
+    }
+
+
+    deviceRead.hDevice  = INVALID_HANDLE_VALUE;
+    deviceWrite.hDevice = INVALID_HANDLE_VALUE;
 
     deviceRead.hDevice = CreateFileW(
         DevicePath,
@@ -253,18 +394,18 @@ bool FwUpdateCfu::FwUpdateOfferSrec(
     {
         wprintf(L"INVALID_HANDLE_VALUE ");
         wprintf(L"while attempting get handle to %s\n", DevicePath);
-        return false;
+        goto Exit;
     }
 
     //query the device for correct report ids for the configured usages provided in the settings file
-    if (!HidCommands::PopulateReportId(deviceRead, protocolSettings.Reports[FWUpdateContent]) ||
-        !HidCommands::PopulateReportId(deviceRead, protocolSettings.Reports[FWUpdateContentResponse]) ||
-        !HidCommands::PopulateReportId(deviceRead, protocolSettings.Reports[FWUpdateOffer]) ||
-        !HidCommands::PopulateReportId(deviceRead, protocolSettings.Reports[FWUpdateOfferResponse])
+    if (!HidCommands::PopulateReportId(deviceRead, ProtocolSettings.Reports[FWUpdateContent]) ||
+        !HidCommands::PopulateReportId(deviceRead, ProtocolSettings.Reports[FWUpdateContentResponse]) ||
+        !HidCommands::PopulateReportId(deviceRead, ProtocolSettings.Reports[FWUpdateOffer]) ||
+        !HidCommands::PopulateReportId(deviceRead, ProtocolSettings.Reports[FWUpdateOfferResponse])
         )
     {
         wprintf(L"one or more of the 4 update usages were not found on this device\n");
-        return false;
+        goto Exit;
     }
 
     deviceWrite.hDevice = CreateFileW(
@@ -280,7 +421,7 @@ bool FwUpdateCfu::FwUpdateOfferSrec(
     {
         wprintf(L"INVALID_HANDLE_VALUE ");
         wprintf(L"while attempting get handle to %s\n", DevicePath);
-        return false;
+        goto Exit;
     }
 
     readContext.readEvent = readEvent;
@@ -298,7 +439,7 @@ bool FwUpdateCfu::FwUpdateOfferSrec(
     if (!ReadThread)
     {
         wprintf(L"Failed to create ReadThread\n");
-        GOTO_FW_UPDATE_EXIT;
+        goto Exit;
     }
 
 
@@ -307,11 +448,11 @@ bool FwUpdateCfu::FwUpdateOfferSrec(
     wprintf(L"\n");
     
     //Attempt to open the fw offerPath file
-    offerfilePathStream.open(offerPath, ios::binary);
+    offerfilePathStream.open(OfferPath, ios::binary);
     if (!offerfilePathStream)
     {
-        wprintf(L"Error opening offerPath aborting FW Update using %s\n", offerPath);
-        GOTO_FW_UPDATE_EXIT;
+        wprintf(L"Error opening offerPath aborting FW Update using %s\n", OfferPath);
+        goto Exit;
     }
 
     char readBuff[16];
@@ -320,28 +461,22 @@ bool FwUpdateCfu::FwUpdateOfferSrec(
 
     memcpy(&offerDataUnion.data[1], readBuff, sizeof(readBuff));
 
-    //for (size_t i = 0; i < 16; i++)
-    //{
-    //    printf("%02X", offerDataUnion.data[i + 1]);
-    //}
-    //printf("\n");
     offerfilePathStream.close();
 
-    //ifstream parser(srecBinPath, ios::binary);
-    //Attempt to open the fw srec file
-    filePathStream.open(srecBinPath, ios::binary);
+    //Attempt to open the firmware srec file
+    filePathStream.open(SrecBinPath, ios::binary);
     if (!filePathStream)
     {
-        wprintf(L"Error opening filepath aborting FW Update: \"%s\"\n", srecBinPath);
-        GOTO_FW_UPDATE_EXIT;
+        wprintf(L"Error opening filepath aborting FW Update: \"%s\"\n", SrecBinPath);
+        goto Exit;
     }
     
-    HidReportIdInfo report = protocolSettings.Reports[FWUpdateOffer];
+    HidReportIdInfo report = ProtocolSettings.Reports[FWUpdateOffer];
     uint32_t reportLength = report.size + 1;
 
     offerDataUnion.offerData.id = report.id;
-    offerDataUnion.offerData.componentInfo.forceReset = forceReset;
-    offerDataUnion.offerData.componentInfo.forceIgnoreVersion = forceIgnoreVersion;
+    offerDataUnion.offerData.componentInfo.forceReset = ForceReset;
+    offerDataUnion.offerData.componentInfo.forceIgnoreVersion = ForceIgnoreVersion;
     memcpy(reportBuffer, &offerDataUnion, sizeof(offerDataUnion));
 
     if (HidCommands::SetOutputReport(deviceWrite, reportBuffer, reportLength))
@@ -366,7 +501,7 @@ bool FwUpdateCfu::FwUpdateOfferSrec(
         wprintf(L"SetOutputReport failed with code %d\n", GetLastError());
     }
 
-    report = protocolSettings.Reports[FWUpdateOfferResponse];
+    report = ProtocolSettings.Reports[FWUpdateOfferResponse];
     reportBuffer[0] = report.id;
     reportLength = report.size + 1;
 
@@ -374,37 +509,40 @@ bool FwUpdateCfu::FwUpdateOfferSrec(
 
     //
     // If completionEvent was signaled, then a read just completed
-    //   so let's get the status and leave this loop and process the data
+    // so let's get the status and leave this loop and process the data
     //
 
     if (WAIT_OBJECT_0 == waitStatus)
     {
         //readEventTriggered
 
-        OfferResponseReportBlob* pOfferResponseReportBlob = reinterpret_cast<OfferResponseReportBlob*>(deviceRead.InputReportBuffer);
+        OfferResponseReportBlob* pOfferResponseReportBlob = 
+            reinterpret_cast<OfferResponseReportBlob*>(deviceRead.InputReportBuffer);
         if (pOfferResponseReportBlob->status != FIRMWARE_UPDATE_OFFER_ACCEPT && 
             pOfferResponseReportBlob->status != FIRMWARE_UPDATE_OFFER_COMMAND_READY)
         {
-            wprintf(L"FW Update not Accepted for %s\n", offerPath);
+            wprintf(L"FW Update not Accepted for %s\n", OfferPath);
 
             HidCommands::printBuffer(deviceRead.InputReportBuffer, sizeof(OfferResponseReportBlob));
 
-            wprintf(L"status: %s (%d)\n", OfferStatusToString(pOfferResponseReportBlob->status), pOfferResponseReportBlob->status);
-            wprintf(L"rrCode: %s (%d)\n", RejectReasonToString(pOfferResponseReportBlob->rrCode), pOfferResponseReportBlob->rrCode);
+            wprintf(L"status: %s (%d)\n", OfferStatusToString(pOfferResponseReportBlob->status), 
+                    pOfferResponseReportBlob->status);
+            wprintf(L"rrCode: %s (%d)\n", RejectReasonToString(pOfferResponseReportBlob->rrCode), 
+                    pOfferResponseReportBlob->rrCode);
             wprintf(L"token: %d\n", pOfferResponseReportBlob->token);
             wprintf(L"reserved0: 0x%X\n", pOfferResponseReportBlob->reserved0);
             wprintf(L"reserved1: 0x%X\n", pOfferResponseReportBlob->reserved1);
             wprintf(L"reserved2: 0x%X\n", pOfferResponseReportBlob->reserved2);
             wprintf(L"reserved3: 0x%X\n", pOfferResponseReportBlob->reserved3);
 
-            GOTO_FW_UPDATE_EXIT;
+            goto Exit;
         }
-        wprintf(L"FW Update offer accepted for %s\n", offerPath);
+        wprintf(L"FW Update offer accepted for %s\n", OfferPath);
     }
     else
     {
         wprintf(L"Timeout while waiting for Offer Command Response Report\n");
-        GOTO_FW_UPDATE_EXIT;
+        goto Exit;
     }
     
     contentdata.sequenceNumber = 0;
@@ -422,6 +560,7 @@ bool FwUpdateCfu::FwUpdateOfferSrec(
     {
         totalContentPacketCount++;
     }
+
     //Reset stream to start
     filePathStream.clear();
     filePathStream.seekg(0, ios::beg);
@@ -438,11 +577,11 @@ bool FwUpdateCfu::FwUpdateOfferSrec(
             startAddress = contentdata.address;
         }
         
-        report = protocolSettings.Reports[FWUpdateContent];
+        report = ProtocolSettings.Reports[FWUpdateContent];
         contentdata.id = report.id;
         reportLength = report.size + 1;
 
-        //subtract startaddress from absolute address
+        //subtract the start address from absolute address
         contentdata.address -= startAddress;
 
         if (contentPacketsSent+1 == totalContentPacketCount)
@@ -451,7 +590,6 @@ bool FwUpdateCfu::FwUpdateOfferSrec(
         }
 
         //Send out the content
-        //wprintf(L"\nNow writing sequence %d, %d sector, address 0x%X", contentdata.sequenceNumber, sectorNumber, contentdata.address);
         if (HidCommands::SetOutputReport(deviceWrite, (char*)&contentdata, reportLength))
         {
             //HidCommands::printBuffer((char*)&contentdata, reportLength);
@@ -459,7 +597,8 @@ bool FwUpdateCfu::FwUpdateOfferSrec(
         else
         {
             wprintf(L"error occurred on SetOutputReport 0x%X:\n", contentdata.address);
-            GOTO_FW_UPDATE_EXIT;
+            ret = FALSE;
+            goto Exit;
         }
 
 
@@ -470,14 +609,14 @@ bool FwUpdateCfu::FwUpdateOfferSrec(
 
             //
             // If completionEvent was signaled, then a read just completed
-            //   so let's get the status and leave this loop and process the data 
+            // so let's get the status and leave this loop and process the data 
             //
-
             if (WAIT_OBJECT_0 == waitStatus2)
             {
                 //readEventTriggered   
 
-                ContentResponseReportBlob* pContentResponseReportBlob = reinterpret_cast<ContentResponseReportBlob*>(deviceRead.InputReportBuffer);
+                ContentResponseReportBlob* pContentResponseReportBlob = 
+                    reinterpret_cast<ContentResponseReportBlob*>(deviceRead.InputReportBuffer);
                 if (pContentResponseReportBlob->status != FIRMWARE_UPDATE_SUCCESS)
                 {
                     wprintf(L"\nFW Update not Completed due to content response error\n");
@@ -485,10 +624,12 @@ bool FwUpdateCfu::FwUpdateOfferSrec(
                     HidCommands::printBuffer((char*)&contentdata, reportLength);
                     HidCommands::printBuffer(deviceRead.InputReportBuffer, sizeof(ContentResponseReportBlob));
 
-                    wprintf(L"status: %s (%d)\n", ContentResponseToString(pContentResponseReportBlob->status), pContentResponseReportBlob->status);
+                    wprintf(L"status: %s (%d)\n", 
+                            ContentResponseToString(pContentResponseReportBlob->status), 
+                            pContentResponseReportBlob->status);
                     wprintf(L"sequenceNumber: %d\n", pContentResponseReportBlob->sequenceNumber);
 
-                    GOTO_FW_UPDATE_EXIT;
+                    goto Exit;
                 }
                 else if (pContentResponseReportBlob->sequenceNumber != contentdata.sequenceNumber)
                 {
@@ -499,8 +640,9 @@ bool FwUpdateCfu::FwUpdateOfferSrec(
                     waiting = false;
                 }
             }
-            else  //timeout and therefore waiting longer
+            else  
             {
+                // timeout and therefore waiting longer.
                 wprintf(L".");
             }
 
@@ -524,24 +666,34 @@ bool FwUpdateCfu::FwUpdateOfferSrec(
     }
     else
     {
-        ret = TRUE;
+        //
+        // All went well.
+        //
+        ret = true;
     }
 
     wprintf(L"\n");
-
     
 Exit:
+    
     readContext.TerminateThread = TRUE;
-    if(ReadThread) CancelSynchronousIo(ReadThread);
+    if (ReadThread)
+    {
+        CancelSynchronousIo(ReadThread);
+    }
 
-    CloseHandle(deviceRead.hDevice);
-    CloseHandle(deviceWrite.hDevice);
+    if (deviceRead.hDevice != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(deviceRead.hDevice);
+    }
+
+    if (deviceWrite.hDevice != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(deviceWrite.hDevice);
+    }
 
     filePathStream.close();
     offerfilePathStream.close();
-
-    deviceRead.hDevice = INVALID_HANDLE_VALUE;
-    deviceWrite.hDevice = INVALID_HANDLE_VALUE;
-
+    
     return ret;
-}
+}// FwUpdateOfferSrec()

@@ -1,22 +1,40 @@
-//Copyright(c) Microsoft Corporation.All rights reserved.
-//
-//Permission is hereby granted, free of charge, to any person obtaining a copy
-//of this software and associated documentation files(the "Software"), to deal
-//in the Software without restriction, including without limitation the rights
-//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//copies of the Software, and to permit persons to whom the Software is
-//furnished to do so, subject to the following conditions :
-//
-//The above copyright notice and this permission notice shall be included in all
-//copies or substantial portions of the Software.
-//
-//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
-//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//SOFTWARE
+/*++
+    MIT License
+    
+    Copyright (C) Microsoft Corporation. All rights reserved.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+
+
+Module Name:
+
+    Main.cpp
+
+Abstract:
+    
+    This application implements the Component Firmware Update (CFU) 
+    protocol for updating a device's firmware image.
+
+Environment:
+
+    User mode.
+
+--*/
 
 #include <stdio.h>
 #include <iostream>
@@ -40,30 +58,51 @@ using namespace std;
 
 void Usage();
 
+_Check_return_
 HRESULT FwUpdateMain(
     __in const int argc,                // Number of strings in array argv
     __in TCHAR* argv[]                  // Array of command-line argument strings
     );   
 
+_Check_return_
 HRESULT FwUpdateVersionRequest(
     __in const int argc,                // Number of strings in array argv
     __in TCHAR* argv[]                  // Array of command-line argument strings
 );
 
+_Check_return_
 bool ReadProtocolSettingsFile(
     _In_ const wstring& settingsPath,
     _Out_ FwUpdateCfu::CfuHidDeviceConfiguration& protocolSettings
 );
 
-const wchar_t* DeviceSelect(
-    vector<FwUpdateCfu::PathAndVersion>& vectorInterfaces); //Collection of available HID devices on the system.
+_Check_return_
+const wchar_t* 
+DeviceSelect(
+    vector<FwUpdateCfu::PathAndVersion>& vectorInterfaces); //Collection of available matching HID devices on the system.
 
 LONG _cdecl _tmain(
-    int argc,                           // Number of strings in array argv
-    TCHAR* argv[])                      // Array of command-line argument strings
+    int argc,
+    TCHAR* argv[])
+/*++
 
+Routine Description:
+
+    Creates an instance of the CFU object if it does not exits.
+
+Arguments:
+    
+    argc -- Number of arguments
+    argv -- Array of input parameters.
+
+Return Value:
+
+  Main return code, or NULL on failure.
+
+--*/
 {
     printf("Argc = %d\n", argc);
+    LONG ret = 0;
     for (int i = 1; i < argc; i++)
     {
         wprintf(L"Argv #%d is: %ws\n", i, argv[i]);
@@ -73,31 +112,53 @@ LONG _cdecl _tmain(
     if (FAILED(hr))
     {
         wprintf(L"Error in CoInitializeEx 0x%x", hr);
+        ret = false;
+        goto Exit;
     }
 
-    if (argc == 1)  //No args
+    if (argc == 1)  //No arguments
     {
         Usage();
-        return 0;
+        ret = false;
+        goto Exit;
     }
 
     if (_wcsicmp(argv[1], L"update") == 0)
     {
-        return FwUpdateMain(argc, argv);
+        ret = FwUpdateMain(argc, argv);
     }
     else if (_wcsicmp(argv[1], L"version") == 0)
     {
-        return FwUpdateVersionRequest(argc, argv);
+        ret = FwUpdateVersionRequest(argc, argv);
     }
     else
     {
         printf("Failed to parse input tokens. ");
     }
 
-    return 0;
-}
+Exit:
+    
+    if (SUCCEEDED(hr))
+    {
+        CoUninitialize();
+    }
+
+    return ret;
+}//_tmain()
 
 void Usage()
+/*++
+
+Routine Description:
+
+    Displays usage for this tool.
+
+Arguments:
+    
+
+Return Value:
+
+--*/
 {
     printf("\n");
     printf("Usage:\n");
@@ -105,73 +166,121 @@ void Usage()
     printf(">.exe version <protocolSettingsPath> (to retrieve version of device)\n");
     printf("\t<VID> / <PID> = 0x045e or 045e\n");
     printf("\n");
-}
+}//Usage()
 
-HRESULT FwUpdateVersionRequest(
-    __in const int argc,                // Number of strings in array argv
-    __in TCHAR* argv[]                  // Array of command-line argument strings
+_Check_return_
+HRESULT 
+FwUpdateVersionRequest(
+    __in const int argc,
+    __in TCHAR* argv[]
 )
+/*++
+
+Routine Description:
+
+    Get the version of the firmware.
+
+Arguments:
+    
+    argc -- Number of command line arguments.
+    argv -- Command line arguments.
+
+Return Value:
+
+    S_OK on success or underlying failure code.
+--*/
 {
     HRESULT hr = S_OK;
+    FwUpdateCfu::VersionFormat version = { 0 };
+    vector<FwUpdateCfu::PathAndVersion> deviceInterfaces;
+    FwUpdateCfu::CfuHidDeviceConfiguration protocolSettings = { 0 };
 
     if (argc < 3)
     {
         printf("Error, too few parameters.\n");
         Usage();
-        return E_FAIL;
+        hr = E_INVALIDARG;
+        goto Exit;
     }
     else if (argc > 3)
     {
         printf("Error, too many parameters.\n");
         Usage();
-        return E_FAIL;
+        hr = E_INVALIDARG;
+        goto Exit;
     }
 
-    FwUpdateCfu::VersionFormat version = { 0 };
-    vector<FwUpdateCfu::PathAndVersion> deviceInterfaces;
-
-    FwUpdateCfu::CfuHidDeviceConfiguration protocolSettings = { 0 };
 
     if (!ReadProtocolSettingsFile(argv[2], protocolSettings))
     {
-        return E_FAIL;
+        hr = E_FAIL;
+        goto Exit;
+    }
+    
+    FwUpdateCfu* cfu = FwUpdateCfu::GetInstance();
+    if (cfu)
+    {
+        hr = cfu->RetrieveDevicesWithVersions(deviceInterfaces, protocolSettings);
+        if (FAILED(hr))
+        {
+            printf("Error Device not found or not working\n");
+            goto Exit;
+        }
     }
 
-    if (!FwUpdateCfu::GetInstance()->RetrieveDevicesWithVersions(deviceInterfaces, protocolSettings))
-    {
-        printf("Error Device not found or not working\n");
-        return E_FAIL;
-    }
+Exit: 
 
     return hr;
-}
+}// FwUpdateVersionRequest()
 
-HRESULT FwUpdateMain(
-    __in const int argc,       // Number of strings in array argv  
-    __in TCHAR* argv[])        // Array of command-line argument strings
+_Check_return_
+HRESULT 
+FwUpdateMain(
+    __in const int argc,
+    __in TCHAR* argv[]) 
+/*++
+
+Routine Description:
+
+    Called from main.
+
+Arguments:
+    
+    argc -- Number of command line arguments.
+    argv -- Command line arguments.
+
+Return Value:
+
+    S_OK on success or underlying failure code.
+--*/
 {
     HRESULT hr = S_OK;
+    FwUpdateCfu::CfuHidDeviceConfiguration protocolSettings = { 0 };
+    FwUpdateCfu::VersionFormat version = { 0 };
+    const wchar_t* pInterface = nullptr;
+    vector<FwUpdateCfu::PathAndVersion> deviceInterfaces;
+    FwUpdateCfu* cfu = nullptr;
+    wstring offerPath;
+    wstring srecBinPath;
+    uint8_t forceIgnoreVersion = FALSE;
+    uint8_t forceReset = FALSE;
 
     if (argc < 5)
     {
         printf("Error, too few parameters.\n");
         Usage();
-        return -1;
+        hr = E_INVALIDARG;
+        goto Exit;
     }
 
     //update <protocolSettingsPath> <path to offer file> <path to srec.bin file> <forceIgnoreVersion> <forceReset>\n");
 
-    FwUpdateCfu::VersionFormat version = { 0 };
-    const wchar_t* pInterface = nullptr;
-    vector<FwUpdateCfu::PathAndVersion> deviceInterfaces;
 
-    wstring offerPath = argv[3];
-    wstring srecBinPath = argv[4];
+    offerPath = argv[3];
+    srecBinPath = argv[4];
 
-    uint8_t forceIgnoreVersion = FALSE;
-    uint8_t forceReset = FALSE;
 
-    //Walk through list of args past the mandatory ones and see if they match our options
+    //Walk through list of arguments past the mandatory ones and see if they match our options
     int optionalArgsToParse = argc - 5;
     for(int i = 0; i < optionalArgsToParse; i++)
     {
@@ -185,23 +294,30 @@ HRESULT FwUpdateMain(
         }
     }
 
-    FwUpdateCfu::CfuHidDeviceConfiguration protocolSettings = { 0 };
     if (!ReadProtocolSettingsFile(argv[2], protocolSettings))
     {
-        return E_FAIL;
+        hr = E_FAIL;
+        goto Exit;
     }
 
-    if (!FwUpdateCfu::GetInstance()->RetrieveDevicesWithVersions(deviceInterfaces, protocolSettings))
+    cfu = FwUpdateCfu::GetInstance();
+    if (cfu)
     {
-        printf("Error Device not found or not working\n");
-        return E_FAIL;
+        hr = cfu->RetrieveDevicesWithVersions(deviceInterfaces, protocolSettings);
     }
+    else
+    {
+        hr = E_OUTOFMEMORY;
+        goto Exit;
+    }
+
     pInterface = DeviceSelect(deviceInterfaces);
     version = deviceInterfaces[0].version.version;
     wprintf(L"Processing offer against %s\n", pInterface);
 
     bool returnVal = false;
 
+    //Prevent Windows from sleeping in the middle of the update
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED);
 
     LARGE_INTEGER freq;
@@ -211,7 +327,12 @@ HRESULT FwUpdateMain(
     QueryPerformanceFrequency(&freq);
     QueryPerformanceCounter(&startFWTime);
 
-    returnVal = FwUpdateCfu::GetInstance()->FwUpdateOfferSrec(protocolSettings, offerPath.c_str(), srecBinPath.c_str(), pInterface, forceIgnoreVersion, forceReset);
+    returnVal = cfu->FwUpdateOfferSrec(protocolSettings, 
+                                       offerPath.c_str(), 
+                                       srecBinPath.c_str(), 
+                                       pInterface, 
+                                       forceIgnoreVersion, 
+                                       forceReset);
     if (returnVal)
     {
         QueryPerformanceCounter(&stopFWTime);
@@ -223,13 +344,32 @@ HRESULT FwUpdateMain(
         wprintf(L"FW Update not performed on offer %s\n", offerPath.c_str());
         hr = E_FAIL;
     }
+
+    //allows Windows to do sleep/hibernate again
     SetThreadExecutionState(ES_CONTINUOUS);
-  
+
+Exit:
 
     return hr;
-}
+}//FwUpdateMain() 
 
-const wchar_t* DeviceSelect(vector<FwUpdateCfu::PathAndVersion>& vectorInterfaces)
+_Check_return_
+const wchar_t* 
+DeviceSelect(vector<FwUpdateCfu::PathAndVersion>& vectorInterfaces)
+/*++
+
+Routine Description:
+
+    Selects a device from a list of interfaces.
+
+Arguments:
+    
+    vectorInterfaces -- List 0f device interfaces found.
+
+Return Value:
+
+    Pointer to the device path or nullptr on failure.
+--*/
 {
     if (vectorInterfaces.size() == 0)
     {
@@ -258,30 +398,66 @@ const wchar_t* DeviceSelect(vector<FwUpdateCfu::PathAndVersion>& vectorInterface
 
         return vectorInterfaces[selection].devicePath.c_str();
     }
-}
+}//DeviceSelect()
 
-vector<string> split(const string& s, char delimiter)
+vector<string> 
+Split(_In_ const string& InputString, _In_ char Delimiter)
+/*++
+
+Routine Description:
+
+    Splits a string based on the specified delimiter.
+
+Arguments:
+    
+    InputString -- Input string
+    Delimiter   -- Delimiter used to split the string.
+
+Return Value:
+
+    List of strings.
+
+--*/
 {
     vector<string> tokens;
     string token;
-    istringstream tokenStream(s);
-    while (getline(tokenStream, token, delimiter))
+    istringstream tokenStream(InputString);
+    while (getline(tokenStream, token, Delimiter))
     {
         tokens.push_back(token);
     }
+
     return tokens;
-}
+}//Split()
 
-bool ReadProtocolSettingsFile(
-    _In_ const wstring& settingsPath,
-    _Out_ FwUpdateCfu::CfuHidDeviceConfiguration& protocolSettings)
+_Check_return_
+bool 
+ReadProtocolSettingsFile(
+    _In_ const wstring& SettingsPath,
+    _Out_ FwUpdateCfu::CfuHidDeviceConfiguration& ProtocolSettings)
+/*++
+
+Routine Description:
+
+    Reads the settings file.
+
+Arguments:
+    
+    SettingsPath     -- Path to the input settings file.
+    ProtocolSettings -- Settings to use for this device.
+
+Return Value:
+
+    List of strings.
+
+--*/
 {
-    memset(&protocolSettings, 0, sizeof(protocolSettings));
+    memset(&ProtocolSettings, 0, sizeof(ProtocolSettings));
 
-    ifstream configStream(settingsPath);
+    ifstream configStream(SettingsPath);
     if (!configStream)
     {
-        wprintf(L"Failed to open settings file \"%s\"\n", settingsPath.c_str());
+        wprintf(L"Failed to open settings file \"%s\"\n", SettingsPath.c_str());
         return false;
     }
 
@@ -289,7 +465,7 @@ bool ReadProtocolSettingsFile(
     while (configStream.getline(line, 512))
     {
         string lines = line;
-        vector<string> tokens = split(lines, ',');
+        vector<string> tokens = Split(lines, ',');
 
         if (tokens.size() < 2)
         {
@@ -300,51 +476,51 @@ bool ReadProtocolSettingsFile(
         const char* value = tokens[1].c_str();
         if (_stricmp(tag, "VID") == 0)
         {
-            protocolSettings.Vid = static_cast<uint16_t>(strtoul(value, nullptr, 16));
+            ProtocolSettings.Vid = static_cast<uint16_t>(strtoul(value, nullptr, 16));
         }
         else if (_stricmp(tag, "PID") == 0)
         {
-            protocolSettings.Pid = static_cast<uint16_t>(strtoul(value, nullptr, 16));
+            ProtocolSettings.Pid = static_cast<uint16_t>(strtoul(value, nullptr, 16));
         }
         else if (_stricmp(tag, "USAGEPAGE") == 0)
         {
-            protocolSettings.UsagePage = static_cast<uint16_t>(strtoul(value, nullptr, 16));
+            ProtocolSettings.UsagePage = static_cast<uint16_t>(strtoul(value, nullptr, 16));
         }
         else if (_stricmp(tag, "USAGECOLLECTION") == 0)
         {
-            protocolSettings.UsageTlc = static_cast<uint16_t>(strtoul(value, nullptr, 16));
+            ProtocolSettings.UsageTlc = static_cast<uint16_t>(strtoul(value, nullptr, 16));
         }
         else if (_stricmp(tag, "VERSION_FEATURE_USAGE") == 0)
         {
-            protocolSettings.Reports[FwUpdateCfu::FwUpdateVersion].Usage = static_cast<uint16_t>(strtoul(value, nullptr, 16));
-            protocolSettings.Reports[FwUpdateCfu::FwUpdateVersion].inOutFeature = HidP_Feature;
-            protocolSettings.Reports[FwUpdateCfu::FwUpdateVersion].size = 60; //bytes
+            ProtocolSettings.Reports[FwUpdateCfu::FwUpdateVersion].Usage = static_cast<uint16_t>(strtoul(value, nullptr, 16));
+            ProtocolSettings.Reports[FwUpdateCfu::FwUpdateVersion].inOutFeature = HidP_Feature;
+            ProtocolSettings.Reports[FwUpdateCfu::FwUpdateVersion].size = 60; //bytes
         }
         else if (_stricmp(tag, "CONTENT_OUTPUT_USAGE") == 0)
         {
-            protocolSettings.Reports[FwUpdateCfu::FWUpdateContent].Usage = static_cast<uint16_t>(strtoul(value, nullptr, 16));
-            protocolSettings.Reports[FwUpdateCfu::FWUpdateContent].inOutFeature = HidP_Output;
-            protocolSettings.Reports[FwUpdateCfu::FWUpdateContent].size = 60; //bytes
+            ProtocolSettings.Reports[FwUpdateCfu::FWUpdateContent].Usage = static_cast<uint16_t>(strtoul(value, nullptr, 16));
+            ProtocolSettings.Reports[FwUpdateCfu::FWUpdateContent].inOutFeature = HidP_Output;
+            ProtocolSettings.Reports[FwUpdateCfu::FWUpdateContent].size = 60; //bytes
         }
         else if (_stricmp(tag, "CONTENT_RESPONSE_INPUT_USAGE") == 0)
         {
-            protocolSettings.Reports[FwUpdateCfu::FWUpdateContentResponse].Usage = static_cast<uint16_t>(strtoul(value, nullptr, 16));
-            protocolSettings.Reports[FwUpdateCfu::FWUpdateContentResponse].inOutFeature = HidP_Input;
-            protocolSettings.Reports[FwUpdateCfu::FWUpdateContentResponse].size = 16; //bytes
+            ProtocolSettings.Reports[FwUpdateCfu::FWUpdateContentResponse].Usage = static_cast<uint16_t>(strtoul(value, nullptr, 16));
+            ProtocolSettings.Reports[FwUpdateCfu::FWUpdateContentResponse].inOutFeature = HidP_Input;
+            ProtocolSettings.Reports[FwUpdateCfu::FWUpdateContentResponse].size = 16; //bytes
         }
         else if (_stricmp(tag, "OFFER_OUTPUT_USAGE") == 0)
         {
-            protocolSettings.Reports[FwUpdateCfu::FWUpdateOffer].Usage = static_cast<uint16_t>(strtoul(value, nullptr, 16));
-            protocolSettings.Reports[FwUpdateCfu::FWUpdateOffer].inOutFeature = HidP_Output;
-            protocolSettings.Reports[FwUpdateCfu::FWUpdateOffer].size = 16; //bytes
+            ProtocolSettings.Reports[FwUpdateCfu::FWUpdateOffer].Usage = static_cast<uint16_t>(strtoul(value, nullptr, 16));
+            ProtocolSettings.Reports[FwUpdateCfu::FWUpdateOffer].inOutFeature = HidP_Output;
+            ProtocolSettings.Reports[FwUpdateCfu::FWUpdateOffer].size = 16; //bytes
         }
         else if (_stricmp(tag, "OFFER_RESPONSE_INPUT_USAGE") == 0)
         {
-            protocolSettings.Reports[FwUpdateCfu::FWUpdateOfferResponse].Usage = static_cast<uint16_t>(strtoul(value, nullptr, 16));
-            protocolSettings.Reports[FwUpdateCfu::FWUpdateOfferResponse].inOutFeature = HidP_Input;
-            protocolSettings.Reports[FwUpdateCfu::FWUpdateOfferResponse].size = 16; //bytes
+            ProtocolSettings.Reports[FwUpdateCfu::FWUpdateOfferResponse].Usage = static_cast<uint16_t>(strtoul(value, nullptr, 16));
+            ProtocolSettings.Reports[FwUpdateCfu::FWUpdateOfferResponse].inOutFeature = HidP_Input;
+            ProtocolSettings.Reports[FwUpdateCfu::FWUpdateOfferResponse].size = 16; //bytes
         }
     }
     
     return true;
-}
+}//ReadProtocolSettingsFile()
