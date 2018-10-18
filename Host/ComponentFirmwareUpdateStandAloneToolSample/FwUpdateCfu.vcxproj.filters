@@ -32,6 +32,9 @@
     <ClInclude Include="SrecParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="HidUpdateCfu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="protocolCfgExample.cfg">
