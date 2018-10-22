@@ -1,48 +1,54 @@
- # Component Firmware Update (CFU)
- 
- The CFU is a protocol and a process for submitting new firmware images to be installed on the target device.
- 
- CFU submissions to the resident firmware are file pairs.  Each submission is a pair of files.
- One file is the Offer part.  The other file is the Content part.
- 
- Each CFU submission (each CFU Offer and Content pair) is required to be created off-line before the submission is sent to the 
- firmware that implements the CFU process.
- 
- The generic, implementation agnostic common code for CFU is contained in ComponentFwUpdate.c. All other files are helper files 
- that can be updated / modified to the developers unique implementation.
+# Component Firmware Update (CFU)
 
- # Creating the Offer and Content
- 
- # The Offer and Content parts 
- 
- The Offer is a 16 byte sequence.  This Offer structure is put into the Offer file.  It's essentially binary data, not text because
- the Offer contains bit fields of specific meaning.
- 
- The Offer that is represented in the file maps to this C structure:
- ```
- typedef struct
+The CFU is a protocol and a process for submitting new firmware images to be installed on the target device.
+
+CFU submissions to the resident firmware are file pairs.  Each submission is a pair of files.
+One file is the Offer part.  The other file is the Content part.
+
+Each CFU submission (each CFU Offer and Content pair) is required to be created off-line before the submission is sent to the 
+firmware that implements the CFU process.
+
+The general the implementation agnostic common code for CFU is contained in 
+ComponentFwUpdate.c. All other files are helper files 
+that can be updated / modified to the developers unique implementation.
+
+# The Offer and Content parts 
+
+The Offer and Content make up a pair of files in the scheme of CFU.
+
+One of the files, the Offer part is simply a 16 byte long file as explained
+below.  The Content part, the actual firmware to be updated is in the 
+format dictated by the end-user developer.  The demonstration and
+example code that goes with this document uses S-Rec files for firmware content.
+
+The Offer is a 16 byte sequence.  This Offer structure is put into the Offer file.  It's essentially binary data, not text because
+the Offer contains bit fields of specific meaning.
+
+The Offer that is represented in the file maps to this C structure:
+```
+typedef struct
 {
-    struct
-    {
-        UINT8 segmentNumber;
-        UINT8 reserved0 : 6;
-        UINT8 forceImmediateReset : 1;
-        UINT8 forceIgnoreVersion : 1;
-        UINT8 componentId;
-        UINT8 token;
-    } componentInfo;
+   struct
+   {
+       UINT8 segmentNumber;
+       UINT8 reserved0 : 6;
+       UINT8 forceImmediateReset : 1;
+       UINT8 forceIgnoreVersion : 1;
+       UINT8 componentId;
+       UINT8 token;
+   } componentInfo;
 
-    UINT32 version;
-    UINT32 hwVariantMask;
-    struct
-    {
-        UINT8 protocolRevision : 4;
-        UINT8 bank : 2;
-        UINT8 reserved0 : 2;
-        UINT8 milestone : 3;
-        UINT8 reserved1 : 5;
-        UINT16 productId;
-    } productInfo;
+   UINT32 version;
+   UINT32 hwVariantMask;
+   struct
+   {
+       UINT8 protocolRevision : 4;
+       UINT8 bank : 2;
+       UINT8 reserved0 : 2;
+       UINT8 milestone : 3;
+       UINT8 reserved1 : 5;
+       UINT16 productId;
+   } productInfo;
 
 } FWUPDATE_OFFER_COMMAND;
 ```
@@ -50,13 +56,17 @@
 From low address to high address, the first byte of the Offer is a segment number.
 
 ```
-   <------- 4 bytes -----------> <-- 8 bytes -->  <-------- 4 bytes --------->
+  <------- 4 bytes -----------> <-- 8 bytes -->  <-------- 4 bytes --------->
 +================================-=============================================+
 |  15:0 7:3  2:0  7:6  5:4  3:0   31:0   31:0     7:0  7:0  7:7  6:6  5:0  7:0 |
 |  PI | R1 | MS | R0 | BK | PR  | VM   | VN   |   TK | CI | FV | FR | R0 | SN  |
 +================================-=============================================+
+```
+
 
 From high address to low address:
+
+```
 
 Byte(s)    Value
 ---------------------------------------------------------
@@ -92,7 +102,15 @@ the HW build -ex. EV1 build, EV2 build. Milestone definition and value assignmen
 UINT8 milestone : 3;
 ```
 
-If the firmware is intended for a specific bank -  The 2-bit field supports four banks.
+If the firmware is intended for a specific bank -  The 2-bit field supports four banks.   The use of a bank register is included in the format of the Offer because there are instances where the target devices uses banked firmware regions.
+If that were the case, and the Offer was meant to update a bank in use, the
+firmware that implements CFU on the target can reject the offer.  Else, the
+firmware on the target implementing CFU can take other action as warranted.
+
+If banking of firmware images is NOT in the design of the end-user
+firmware, then it's reasonable to ignore this field (set to whatever
+values that are convenient, but the value in the bank field is optional
+and depends on the way in which the on target  firmware implements CFU).
 
 ```
 UINT8 bank : 2;
@@ -156,7 +174,7 @@ The API of `ProcessCFWUOffer` accepts two arguments.
 
 ```
 void ProcessCFWUOffer(FWUPDATE_OFFER_COMMAND* pCommand,
-                      FWUPDATE_OFFER_RESPONSE* pResponse)
+                     FWUPDATE_OFFER_RESPONSE* pResponse)
 ```
 
 Suppose the user-software sends data bytes to the running firmware, then the first message is the Offer message.
@@ -171,19 +189,19 @@ During the disposition of the Offer, the running firmware notifies the sender by
 
 The running firmware should keep track of it's state in CFU process. It may be ready/waiting to 
 accept an offer, in the middle of a CFU transaction, or waiting to swap banks between active/inactive FW. 
- 
+
 If the running FW is in the middle of a CFU transaction - don't accept/process this offer and notify host accordingly.
 
 ```
-    if (s_currentOffer.updateInProgress)
-    {
-        memset(pResponse, 0, sizeof (FWUPDATE_OFFER_RESPONSE));
+   if (s_currentOffer.updateInProgress)
+   {
+       memset(pResponse, 0, sizeof (FWUPDATE_OFFER_RESPONSE));
 
-        pResponse->status = FIRMWARE_UPDATE_OFFER_BUSY;
-        pResponse->rejectReasonCode = FIRMWARE_UPDATE_OFFER_BUSY;
-        pResponse->token = token;
-        return;
-    }
+       pResponse->status = FIRMWARE_UPDATE_OFFER_BUSY;
+       pResponse->rejectReasonCode = FIRMWARE_UPDATE_OFFER_BUSY;
+       pResponse->token = token;
+       return;
+   }
 ```
 
 The component ID field of the Offer may be used to signal the running firmware that a special action is requested from
@@ -191,19 +209,19 @@ the running firmware. In the example CFU code, a special offer command is used b
 status of the CFU engine - whether the running software is capable and ready to accept CFU Offers.
 
 ```
-    else if (componentId == CFU_SPECIAL_OFFER_CMD)
-    {
-        FWUPDATE_SPECIAL_OFFER_COMMAND* pSpecialCommand =
-            (FWUPDATE_SPECIAL_OFFER_COMMAND*)pCommand;
-        if (pSpecialCommand->componentInfo.commandCode == CFU_SPECIAL_OFFER_GET_STATUS)
-        {
-            memset(pResponse, 0, sizeof (FWUPDATE_OFFER_RESPONSE));
+   else if (componentId == CFU_SPECIAL_OFFER_CMD)
+   {
+       FWUPDATE_SPECIAL_OFFER_COMMAND* pSpecialCommand =
+           (FWUPDATE_SPECIAL_OFFER_COMMAND*)pCommand;
+       if (pSpecialCommand->componentInfo.commandCode == CFU_SPECIAL_OFFER_GET_STATUS)
+       {
+           memset(pResponse, 0, sizeof (FWUPDATE_OFFER_RESPONSE));
 
-            pResponse->status = FIRMWARE_UPDATE_OFFER_COMMAND_READY;
-            pResponse->token = token;
-            return;
-        }
-    }
+           pResponse->status = FIRMWARE_UPDATE_OFFER_COMMAND_READY;
+           pResponse->token = token;
+           return;
+       }
+   }
 ```
 
 Finally, a check is made if there is a bank swap pending.  The bank swap
@@ -217,15 +235,15 @@ for information to be exchanged between the remote user application
 conducting the CFU and the in situ firmware that is running.
 
 ```
-    else if (s_bankSwapPending)
-    {
-        memset(pResponse, 0, sizeof (FWUPDATE_OFFER_RESPONSE));
+   else if (s_bankSwapPending)
+   {
+       memset(pResponse, 0, sizeof (FWUPDATE_OFFER_RESPONSE));
 
-        pResponse->status = FIRMWARE_UPDATE_OFFER_REJECT;
-        pResponse->rejectReasonCode = FIRMWARE_UPDATE_OFFER_SWAP_PENDING;
-        pResponse->token = token;
-        return;
-    }
+       pResponse->status = FIRMWARE_UPDATE_OFFER_REJECT;
+       pResponse->rejectReasonCode = FIRMWARE_UPDATE_OFFER_SWAP_PENDING;
+       pResponse->token = token;
+       return;
+   }
 ```
 
 Finally, if the state of the running FW is not busy, and the componentId is not
@@ -309,11 +327,11 @@ are used by the CFU algorithms in the demonstration.
 ```
 typedef struct
 {
-    UINT8 flags;
-    UINT8 length;
-    UINT16 sequenceNumber;
-    UINT32 address;
-    UINT8 pData[MAX_UINT8];
+   UINT8 flags;
+   UINT8 length;
+   UINT16 sequenceNumber;
+   UINT32 address;
+   UINT8 pData[MAX_UINT8];
 } FWUPDATE_CONTENT_COMMAND;
 ```
 
@@ -323,38 +341,38 @@ to be written into memory.  The preamble of the Content is
 this structure fields:
 
 1.  `UINT8 flags`   Denotes if the Content "block" is the First, Last or
-    other.
+   other.
 1.  `UINT8 length`  Marks the length of the `pData` field.  In the 
-    demonstration code for CFU, the limit on the size of the `pData`
-    is 255 bytes.  Other implementations may vary the maximum size
-    of the "block"
+   demonstration code for CFU, the limit on the size of the `pData`
+   is 255 bytes.  Other implementations may vary the maximum size
+   of the "block"
 1.  `UINT16 sequenceNumber`  Marks the index counter of which block
-    is being submitted as Content.
+   is being submitted as Content.
 1.  `UINT32 address`  The address offset of the block.  In the 
-    demonstration of CFU of this release, the implementation has
-    predefined information about the physical address of each App
-    region.  For example, a two bank FW implementation may have
-    App1 begin at address `0x9000` and App2 begin at address `0xA0000`.
-    So, depending on how the
-    firmware image was prepared (S-Records) the address in the S-Record
-    may be either the physical address or an offset.  In any case
-    there needs to be a shared understanding between the preparation
-    of the Content and the implementation specific routines of the
-    CFU Content processing to determine the true physical address
-    of where to write the block in memory.  It is left up to the FW 
-    developer to adopt best practices and do checks for valid address
-    ranges for each content blog. For
-    example, the CFU code demonstrates a check made if perhaps App1
-    (meant for `0x9000`) has addresses that overlap into App2, etc.
+   demonstration of CFU of this release, the implementation has
+   predefined information about the physical address of each App
+   region.  For example, a two bank FW implementation may have
+   App1 begin at address `0x9000` and App2 begin at address `0xA0000`.
+   So, depending on how the
+   firmware image was prepared (S-Records) the address in the S-Record
+   may be either the physical address or an offset.  In any case
+   there needs to be a shared understanding between the preparation
+   of the Content and the implementation specific routines of the
+   CFU Content processing to determine the true physical address
+   of where to write the block in memory.  It is left up to the FW 
+   developer to adopt best practices and do checks for valid address
+   ranges for each content blog. For
+   example, the CFU code demonstrates a check made if perhaps App1
+   (meant for `0x9000`) has addresses that overlap into App2, etc.
 1.  `UINT8 pData[MAX_UINT8]`   This is the raw bytes of the
-    firmware image block.  Care is taken in the user-application to
-    only put `length` bytes into the complete byte stream of the
-    Content block.  
+   firmware image block.  Care is taken in the user-application to
+   only put `length` bytes into the complete byte stream of the
+   Content block.  
 
 There are no bit fields used in the Content structure as per the
 CFU demonstration from the code provided.
 
-    
+   
 
 ### The First Block
 
@@ -438,5 +456,5 @@ to denote what FW image to boot into on reset is left to the FW developer.
 
 
 
- 
- 
+
+
