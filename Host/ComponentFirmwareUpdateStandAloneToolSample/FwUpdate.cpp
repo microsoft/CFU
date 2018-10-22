@@ -44,42 +44,14 @@ Environment:
 #include <windows.h>
 #include <winternl.h>
 #include <vector>
-
 #include "HidCommands.h"
 #include "FwUpdate.h"
 #include "SrecParser.h"
-
-FwUpdateCfu* FwUpdateCfu::mpFwUpdateCfu = nullptr;
-
-_Check_return_
-FwUpdateCfu* FwUpdateCfu::GetInstance()
-/*++
-
-Routine Description:
-
-    Creates an instance of the CFU singleton object if it does not exits.
-
-Arguments:
-    
-
-Return Value:
-
-  Pointer to the CFU object, or NULL on failure.
-
---*/
-{
-    if (!mpFwUpdateCfu)
-    {
-        mpFwUpdateCfu = new (std::nothrow) FwUpdateCfu();
-    }
-
-    return mpFwUpdateCfu;
-}// GetInstance()
-
+#include "HidUpdateCfu.h"
 
 _Check_return_
 HRESULT
-FwUpdateCfu::RetrieveDevicesWithVersions(_Out_ vector<PathAndVersion>& VectorInterfaces,
+FwUpdateCfu::RetrieveDevicesWithVersions(_Out_ std::vector<PathAndVersion>& VectorInterfaces,
                                          _In_ CfuHidDeviceConfiguration& ProtocolSettings)
 /*++
 
@@ -104,20 +76,18 @@ Return Value:
     HRESULT hr = S_OK;
     GUID deviceInterface;
     CONFIGRET cr;
-    PWCHAR pInterfaceList = nullptr;
-    PWCHAR pInterface = nullptr;
+    PWCHAR pInterfaceList = NULL;
+    PWCHAR pInterface = NULL;
     VectorInterfaces.clear();
     VersionReport version = { 0 };
 
-    //
     // Get list of installed HID devices.
-    // 
     HidD_GetHidGuid(&deviceInterface);
     ULONG numCharacters = 0;
     cr = CM_Get_Device_Interface_List_SizeW(
         &numCharacters,
         &deviceInterface,
-        nullptr,
+        NULL,
         CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
     if (cr != CR_SUCCESS)
     {
@@ -125,9 +95,7 @@ Return Value:
         goto Exit;
     }
 
-    //
     // Get a list of the device interfaces.
-    // 
     pInterfaceList = new (std::nothrow) WCHAR[numCharacters];
     if (!pInterfaceList)
     {
@@ -137,7 +105,7 @@ Return Value:
 
     cr = CM_Get_Device_Interface_ListW(
         &deviceInterface,
-        nullptr,
+        NULL,
         pInterfaceList,
         numCharacters,
         CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
@@ -148,24 +116,26 @@ Return Value:
         goto Exit;
     }
 
-    // 
     // Walk and filter the device interface list based on who responds to a 
     // version query.
-    // 
     pInterface = pInterfaceList;
     while (*pInterface != L'\0')
     {
         hr = GetVersion(pInterface, version, ProtocolSettings);
         if (SUCCEEDED(hr))
         {
-            PathAndVersion foundDeviceWithVersion = { wstring(pInterface),version };
+            PathAndVersion foundDeviceWithVersion = { std::wstring(pInterface),version };
 
-            wprintf(L"Found device %d:\n", (uint32_t)VectorInterfaces.size());
-            wprintf(L"Header 0x%08X\n", version.header);
-            wprintf(L"FwVersion %d.%d.%d\n", version.version.Major, 
-                    version.version.Minor, version.version.Variant);
-            wprintf(L"Property 0x%08X\n", version.property);
-            wprintf(L"from device %s\n", pInterface);
+            wprintf(L"Found device %d:\n"
+                    L"Header 0x%08X\n"
+                    L"FwVersion %d.%d.%d\n"
+                    L"Property 0x%08X\n"
+                    L"from device %s\n",
+                   (UINT32)VectorInterfaces.size(),
+                   version.header,
+                   version.version.Major, version.version.Minor, version.version.Variant,
+                   version.property,
+                   pInterface);
 
             VectorInterfaces.push_back(foundDeviceWithVersion);
         }
@@ -179,14 +149,9 @@ Return Value:
     }
 
 Exit:
-
-    if (pInterfaceList)
-    { 
-        delete[] pInterfaceList;
-    }
-    
+    SAFE_DELETEA(pInterfaceList);
     return hr;
-}//RetrieveDevicesWithVersions()
+}
 
 _Check_return_
 HRESULT
@@ -218,43 +183,46 @@ Return Value:
     HRESULT    hr = S_OK;
     device.hDevice = INVALID_HANDLE_VALUE;
     
-    //Check that the VID/PID matches.
-    wchar_t vidPidFilterString[256];
+    // Check that the VID/PID matches.
+    wchar_t vidPidFilterString[256] = { 0 };
     memset(&VerReport, 0, sizeof(VerReport));
 
-    if (ProtocolSettings.Vid && ProtocolSettings.Pid) //filter on both if both set
+
+    // Filter on both if both set
+    if (ProtocolSettings.Vid && ProtocolSettings.Pid) 
     {
         swprintf(vidPidFilterString, 256, L"VID_%04X&PID_%04X", 
                  ProtocolSettings.Vid, ProtocolSettings.Pid);
         if (!wcsstr(DevicePath, vidPidFilterString))
         {
-            //The device found doesn't match the vid and pid
+            // The device found doesn't match the vid and pid
             //wprintf(L"The device found does not match the VID/PID\n");
             hr = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
             goto Exit;
 
         }
     }
-    else //filter on vid only (vid is mandatory)
+    // Filter on vid only (vid is mandatory)
+    else
     {
         swprintf(vidPidFilterString, 256, L"VID_%04X", ProtocolSettings.Vid);
         if (!wcsstr(DevicePath, vidPidFilterString))
         {
-            //The device found doesn't match the vid
+            // The device found doesn't match the vid
             hr = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
             goto Exit;
         }
     }
 
-    //Open a handle to the device.
+    // Open a handle to the device.
     device.hDevice = CreateFileW(
         DevicePath,
         GENERIC_READ,
         FILE_SHARE_READ | FILE_SHARE_WRITE,
-        nullptr,
+        NULL,
         OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL,
-        nullptr);
+        NULL);
     if (device.hDevice == INVALID_HANDLE_VALUE)
     {
         wprintf(L"INVALID_HANDLE_VALUE %s", DevicePath);
@@ -262,15 +230,14 @@ Return Value:
         goto Exit;
     }
 
-    //Try to get the device's preparsed HID data.
+    // Try to get the device's preparsed HID data.
     if (!HidD_GetPreparsedData(device.hDevice, &device.PreparsedData))
     {
-        //wprintf(L"HidD_GetPreparsedData returned false on %s", DevicePath);
         hr = HRESULT_FROM_WIN32(GetLastError());
         goto Exit;
     }
 
-    //Get device capabilities.
+    // Get device capabilities.
     status = HidP_GetCaps(device.PreparsedData, &device.Caps);
     if (!NT_SUCCESS(status))
     {
@@ -279,16 +246,15 @@ Return Value:
         goto Exit;
     }
 
-    //Filter out hits for UsagePage
+    // Filter out hits for UsagePage
     if (device.Caps.UsagePage != ProtocolSettings.UsagePage)
     {
         hr = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
         goto Exit;
     }
 
-    //Filter out hits for Usage Top Level Collection if set and not matched
-    if (ProtocolSettings.UsageTlc != 0 &&
-        device.Caps.Usage != ProtocolSettings.UsageTlc)
+    // Filter out hits for Usage Top Level Collection if set and not matched
+    if (ProtocolSettings.UsageTlc != 0 && device.Caps.Usage != ProtocolSettings.UsageTlc)
     {
         hr = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
         goto Exit;
@@ -300,10 +266,11 @@ Return Value:
         goto Exit;
     }
 
-    //Query device for "FeatureVersion" usage. If supported, get the version and return success.
+    // Query device for "FeatureVersion" usage. 
+    // If supported, get the version and return success.
 
-    char reportBuffer[1024];
-    uint32_t reportLengthRead = 0;
+    char reportBuffer[1024] = { 0 };
+    UINT32 reportLengthRead = 0U;
 
     if (HidCommands::GetFeatureReport(device, ProtocolSettings.UsagePage, 
                                       ProtocolSettings.Reports[FwUpdateVersion].Usage, 
@@ -313,35 +280,34 @@ Return Value:
     {
         if (reportLengthRead < sizeof(VersionReport))
         {
-            //invalid reportLength read
+            // Invalid reportLength read
             wprintf(L"Expected report length of %zu and got %u\n", 
                     sizeof(VersionReport), reportLengthRead);
             hr = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
             goto Exit;
         }
 
+        //copy to output
         VerReport = *reinterpret_cast<VersionReport*>(reportBuffer); //copy to output
     }
 
 Exit:
-    
     if (device.hDevice != INVALID_HANDLE_VALUE)
     {
         CloseHandle(device.hDevice);
     }
-
     return hr;
-}//GetVersion()
+}
 
 _Check_return_
-bool 
+BOOL 
 FwUpdateCfu::FwUpdateOfferSrec(
     _In_   CfuHidDeviceConfiguration& ProtocolSettings,
     _In_z_ const TCHAR* OfferPath, 
     _In_z_ const TCHAR* SrecBinPath,
     _In_z_ PCWSTR DevicePath,
-    _In_   uint8_t ForceIgnoreVersion, 
-    _In_   uint8_t ForceReset)
+    _In_   UINT8 ForceIgnoreVersion, 
+    _In_   UINT8 ForceReset)
 /*++
 
 Routine Description:
@@ -369,13 +335,13 @@ Return Value:
     HANDLE     ReadThread = 0;
     HID_DEVICE deviceRead;
     HID_DEVICE deviceWrite;
-    bool ret = false;
-    ifstream offerfilePathStream;
-    ifstream filePathStream;
+    BOOL ret = FALSE;
+    std::ifstream offerfilePathStream;
+    std::ifstream filePathStream;
     OfferDataUnion offerDataUnion = { 0 };
     ContentData contentdata = { 0 };
 
-    readEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    readEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (!readEvent)
     {
         wprintf(L"Failed to create readEvent Handle\n");
@@ -390,26 +356,27 @@ Return Value:
         DevicePath,
         GENERIC_READ,
         FILE_SHARE_READ | FILE_SHARE_WRITE,
-        nullptr,
+        NULL,
         OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL,
-        nullptr);
+        NULL);
 
     if (deviceRead.hDevice == INVALID_HANDLE_VALUE)
     {
-        wprintf(L"INVALID_HANDLE_VALUE ");
-        wprintf(L"while attempting get handle to %s\n", DevicePath);
+        wprintf(L"INVALID_HANDLE_VALUE "
+                L"while attempting get handle to %s\n", 
+                DevicePath);
         goto Exit;
     }
 
-    //query the device for correct report ids for the configured usages provided in the settings file
+    // Query the device for correct report ids for the configured usages provided in the settings file
     if (!HidCommands::PopulateReportId(deviceRead, ProtocolSettings.Reports[FWUpdateContent]) ||
         !HidCommands::PopulateReportId(deviceRead, ProtocolSettings.Reports[FWUpdateContentResponse]) ||
         !HidCommands::PopulateReportId(deviceRead, ProtocolSettings.Reports[FWUpdateOffer]) ||
         !HidCommands::PopulateReportId(deviceRead, ProtocolSettings.Reports[FWUpdateOfferResponse])
         )
     {
-        wprintf(L"one or more of the 4 update usages were not found on this device\n");
+        wprintf(L"One or more of the 4 update usages were not found on this device.\n");
         goto Exit;
     }
 
@@ -417,15 +384,16 @@ Return Value:
         DevicePath,
         GENERIC_READ,
         FILE_SHARE_READ | FILE_SHARE_WRITE,
-        nullptr,
+        NULL,
         OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL,
-        nullptr);
+        NULL);
 
     if (deviceWrite.hDevice == INVALID_HANDLE_VALUE)
     {
-        wprintf(L"INVALID_HANDLE_VALUE ");
-        wprintf(L"while attempting get handle to %s\n", DevicePath);
+        wprintf(L"INVALID_HANDLE_VALUE "
+                L"while attempting get handle to %s\n", 
+                DevicePath);
         goto Exit;
     }
 
@@ -435,41 +403,39 @@ Return Value:
     readContext.NumberOfReads = INFINITE_READS;
 
     ReadThread = CreateThread(
-        nullptr,
+        NULL,
         0,
         (LPTHREAD_START_ROUTINE)HidCommands::AsynchReadThreadProc,
         (LPVOID)&readContext,
         0,
         (LPDWORD)&mThreadID);
+
     if (!ReadThread)
     {
         wprintf(L"Failed to create ReadThread\n");
         goto Exit;
     }
 
-
     char reportBuffer[REPORT_LENGTH_STANDARD] = { 0 };
 
     wprintf(L"\n");
-    
-    //Attempt to open the fw offerPath file
-    offerfilePathStream.open(OfferPath, ios::binary);
+
+    // Attempt to open the fw offerPath file
+    offerfilePathStream.open(OfferPath, std::ios::binary);
     if (!offerfilePathStream)
     {
-        wprintf(L"Error opening offerPath aborting FW Update using %s\n", OfferPath);
+        wprintf(L"Error opening offerPath aborting FW Update using \"%s\"\n", OfferPath);
         goto Exit;
     }
 
-    char readBuff[16];
+    char readBuff[16] = { 0 };
     // read data as a block:
     offerfilePathStream.read(readBuff, 16);
-
     memcpy(&offerDataUnion.data[1], readBuff, sizeof(readBuff));
-
     offerfilePathStream.close();
 
-    //Attempt to open the firmware srec file
-    filePathStream.open(SrecBinPath, ios::binary);
+    // Attempt to open the firmware srec file
+    filePathStream.open(SrecBinPath, std::ios::binary);
     if (!filePathStream)
     {
         wprintf(L"Error opening filepath aborting FW Update: \"%s\"\n", SrecBinPath);
@@ -477,7 +443,7 @@ Return Value:
     }
     
     HidReportIdInfo report = ProtocolSettings.Reports[FWUpdateOffer];
-    uint32_t reportLength = report.size + 1;
+    UINT32 reportLength = report.size + 1;
 
     offerDataUnion.offerData.id = report.id;
     offerDataUnion.offerData.componentInfo.forceReset = ForceReset;
@@ -486,41 +452,46 @@ Return Value:
 
     if (HidCommands::SetOutputReport(deviceWrite, reportBuffer, reportLength))
     {
-        wprintf(L"SetOutputReport for Offer:\n");
-        wprintf(L"bank: %d\n", offerDataUnion.offerData.productInfo.bank);
-        wprintf(L"milestone: %d\n", offerDataUnion.offerData.productInfo.milestone);
-        wprintf(L"platformId: 0x%x\n", offerDataUnion.offerData.productInfo.platformId);
-        wprintf(L"protocolRevision: 0x%x\n", offerDataUnion.offerData.productInfo.protocolRevision);
-        wprintf(L"compatVariantMask: 0x%x\n", offerDataUnion.offerData.compatVariantMask);
-        wprintf(L"componentId: 0x%x\n", offerDataUnion.offerData.componentInfo.componentId);
-        wprintf(L"forceIgnoreVersion: 0x%x\n", offerDataUnion.offerData.componentInfo.forceIgnoreVersion);
-        wprintf(L"forceReset: 0x%x\n", offerDataUnion.offerData.componentInfo.forceReset);
-        wprintf(L"segment: 0x%x\n", offerDataUnion.offerData.componentInfo.segment);
-        wprintf(L"token: 0x%x\n", offerDataUnion.offerData.componentInfo.token);
-
-        //HidCommands::printBuffer(reportBuffer, reportLength);
+        wprintf(L"SetOutputReport for Offer:\n"
+                L"bank: %d\n"
+                L"milestone: %d\n"
+                L"platformId: 0x%X\n"
+                L"protocolRevision: 0x%X\n"
+                L"compatVariantMask: 0x%X\n"
+                L"componentId: 0x%X\n"
+                L"forceIgnoreVersion: 0x%X\n"
+                L"forceReset: 0x%X\n"
+                L"segment: 0x%X\n"
+                L"token: 0x%X\n",
+                offerDataUnion.offerData.productInfo.bank,
+                offerDataUnion.offerData.productInfo.milestone,
+                offerDataUnion.offerData.productInfo.platformId,
+                offerDataUnion.offerData.productInfo.protocolRevision,
+                offerDataUnion.offerData.compatVariantMask,
+                offerDataUnion.offerData.componentInfo.componentId,
+                offerDataUnion.offerData.componentInfo.forceIgnoreVersion,
+                offerDataUnion.offerData.componentInfo.forceReset,
+                offerDataUnion.offerData.componentInfo.segment,
+                offerDataUnion.offerData.componentInfo.token);
     }
     else
     {
         HidCommands::printBuffer(reportBuffer, reportLength);
-        wprintf(L"SetOutputReport failed with code %d\n", GetLastError());
+        wprintf(L"SetOutputReport failed with code 0x%08X\n", GetLastError());
     }
 
     report = ProtocolSettings.Reports[FWUpdateOfferResponse];
     reportBuffer[0] = report.id;
     reportLength = report.size + 1;
 
-    uint32_t waitStatus = WaitForSingleObject(readEvent, READ_THREAD_TIMEOUT_MS);
+    UINT32 waitStatus = WaitForSingleObject(readEvent, READ_THREAD_TIMEOUT_MS);
 
-    //
     // If completionEvent was signaled, then a read just completed
     // so let's get the status and leave this loop and process the data
-    //
 
     if (WAIT_OBJECT_0 == waitStatus)
     {
-        //readEventTriggered
-
+        // ReadEventTriggered
         OfferResponseReportBlob* pOfferResponseReportBlob = 
             reinterpret_cast<OfferResponseReportBlob*>(deviceRead.InputReportBuffer);
         if (pOfferResponseReportBlob->status != FIRMWARE_UPDATE_OFFER_ACCEPT && 
@@ -528,18 +499,25 @@ Return Value:
         {
             wprintf(L"FW Update not Accepted for %s\n", OfferPath);
 
-            HidCommands::printBuffer(deviceRead.InputReportBuffer, sizeof(OfferResponseReportBlob));
+            HidCommands::printBuffer(deviceRead.InputReportBuffer, 
+                                     sizeof(OfferResponseReportBlob));
 
-            wprintf(L"status: %s (%d)\n", OfferStatusToString(pOfferResponseReportBlob->status), 
-                    pOfferResponseReportBlob->status);
-            wprintf(L"rrCode: %s (%d)\n", RejectReasonToString(pOfferResponseReportBlob->rrCode), 
-                    pOfferResponseReportBlob->rrCode);
-            wprintf(L"token: %d\n", pOfferResponseReportBlob->token);
-            wprintf(L"reserved0: 0x%X\n", pOfferResponseReportBlob->reserved0);
-            wprintf(L"reserved1: 0x%X\n", pOfferResponseReportBlob->reserved1);
-            wprintf(L"reserved2: 0x%X\n", pOfferResponseReportBlob->reserved2);
-            wprintf(L"reserved3: 0x%X\n", pOfferResponseReportBlob->reserved3);
-
+            wprintf(L"status: %s (%d)\n"
+                    L"rrCode: %s (%d)\n" 
+                    L"token: %d\n"
+                    L"reserved0: 0x%X\n"
+                    L"reserved1: 0x%X\n"
+                    L"reserved2: 0x%X\n"
+                    L"reserved3: 0x%X\n",
+                    OfferStatusToString(pOfferResponseReportBlob->status), 
+                    pOfferResponseReportBlob->status,
+                    RejectReasonToString(pOfferResponseReportBlob->rrCode), 
+                    pOfferResponseReportBlob->rrCode,
+                    pOfferResponseReportBlob->token,
+                    pOfferResponseReportBlob->reserved0,
+                    pOfferResponseReportBlob->reserved1,
+                    pOfferResponseReportBlob->reserved2,
+                    pOfferResponseReportBlob->reserved3);
             goto Exit;
         }
         wprintf(L"FW Update offer accepted for %s\n", OfferPath);
@@ -552,30 +530,29 @@ Return Value:
     
     contentdata.sequenceNumber = 0;
     contentdata.address = 0;
-    contentdata.flags = FIRMWARE_UPDATE_FLAG_FIRST_BLOCK; //first block
 
-    uint32_t startAddress = 0;
-
-    uint32_t totalContentPacketCount = 0;
-    uint32_t contentPacketsSent = 0;
+    // First block
+    contentdata.flags = FIRMWARE_UPDATE_FLAG_FIRST_BLOCK;
+    UINT32 startAddress = 0;
+    UINT32 totalContentPacketCount = 0;
+    UINT32 contentPacketsSent = 0;
     double lastKnownContentCompletionPerc = -1.0;
 
-    //walk the entire file to see how many content packets need to be sent
+    // Walk the entire file to see how many content packets need to be sent
     while (ProcessSrecBin(filePathStream, contentdata))
     {
         totalContentPacketCount++;
     }
 
-    //Reset stream to start
+    // Reset stream to start
     filePathStream.clear();
-    filePathStream.seekg(0, ios::beg);
+    filePathStream.seekg(0, std::ios::beg);
 
     wprintf(L"Beginning content packet transfers:\n");
     while (ProcessSrecBin(filePathStream, contentdata))
     {
         contentdata.flags = 0;
-
-        //establish starting absolute address offset
+        // Establish starting absolute address offset
         if (contentPacketsSent == 0)
         {
             contentdata.flags = FIRMWARE_UPDATE_FLAG_FIRST_BLOCK;
@@ -586,54 +563,49 @@ Return Value:
         contentdata.id = report.id;
         reportLength = report.size + 1;
 
-        //subtract the start address from absolute address
+        // Subtract the start address from absolute address
         contentdata.address -= startAddress;
-
         if (contentPacketsSent+1 == totalContentPacketCount)
         {
-            contentdata.flags = FIRMWARE_UPDATE_FLAG_LAST_BLOCK; //Last block
+            // Last block
+            contentdata.flags = FIRMWARE_UPDATE_FLAG_LAST_BLOCK;
         }
 
-        //Send out the content
+        // Send out the content
         if (HidCommands::SetOutputReport(deviceWrite, (char*)&contentdata, reportLength))
         {
-            //HidCommands::printBuffer((char*)&contentdata, reportLength);
+#if defined(_DEBUG_HID_COMMANDS)
+            HidCommands::printBuffer((char*)&contentdata, reportLength);
+#endif
         }
         else
         {
-            wprintf(L"error occurred on SetOutputReport 0x%X:\n", contentdata.address);
+            wprintf(L"Error occurred on SetOutputReport 0x%X:\n", contentdata.address);
             ret = FALSE;
             goto Exit;
         }
 
 
-        bool waiting = true;
+        BOOL waiting = TRUE;
         while (waiting)
         {
-            uint32_t waitStatus2 = WaitForSingleObject(readEvent, READ_THREAD_TIMEOUT_MS);
-
-            //
+            UINT32 waitStatus2 = WaitForSingleObject(readEvent, READ_THREAD_TIMEOUT_MS);
             // If completionEvent was signaled, then a read just completed
-            // so let's get the status and leave this loop and process the data 
-            //
+            // so get the status and leave this loop and process the data 
             if (WAIT_OBJECT_0 == waitStatus2)
             {
-                //readEventTriggered   
-
+                // ReadEventTriggered   
                 ContentResponseReportBlob* pContentResponseReportBlob = 
                     reinterpret_cast<ContentResponseReportBlob*>(deviceRead.InputReportBuffer);
                 if (pContentResponseReportBlob->status != FIRMWARE_UPDATE_SUCCESS)
                 {
                     wprintf(L"\nFW Update not Completed due to content response error\n");
-
                     HidCommands::printBuffer((char*)&contentdata, reportLength);
                     HidCommands::printBuffer(deviceRead.InputReportBuffer, sizeof(ContentResponseReportBlob));
-
                     wprintf(L"status: %s (%d)\n", 
                             ContentResponseToString(pContentResponseReportBlob->status), 
                             pContentResponseReportBlob->status);
                     wprintf(L"sequenceNumber: %d\n", pContentResponseReportBlob->sequenceNumber);
-
                     goto Exit;
                 }
                 else if (pContentResponseReportBlob->sequenceNumber != contentdata.sequenceNumber)
@@ -642,7 +614,7 @@ Return Value:
                 }
                 else
                 {
-                    waiting = false;
+                    waiting = FALSE;
                 }
             }
             else  
@@ -650,37 +622,35 @@ Return Value:
                 // timeout and therefore waiting longer.
                 wprintf(L".");
             }
-
         }
 
         contentdata.sequenceNumber++;
         contentPacketsSent++;
-
         double completionPerc = contentPacketsSent * 100.0 / totalContentPacketCount;
         if (completionPerc >= static_cast<int>(lastKnownContentCompletionPerc + 1)/1)
         {
-            wprintf(L"Successfully sent %d content packets (%0.1f%% complete)\n", contentPacketsSent, completionPerc);
+            wprintf(L"Successfully sent %d content packets (%0.1f%% complete)\n", 
+                    contentPacketsSent, completionPerc);
             lastKnownContentCompletionPerc = completionPerc;
         }
     }
 
-    //Make we sent 100% of packets
+    // Make sure we sent 100% of packets
     if ((contentPacketsSent * 100.0 / totalContentPacketCount) < 100.0)
     {
-        wprintf(L"Never sent final block command because either srec file not completed or there were no content packets to send in the file\n");
+        wprintf(L"Never sent final block command because either srec "
+                "file not completed or there were no content packets to "
+                "send in the file\n");
+        ret = FALSE;
     }
     else
     {
-        //
-        // All went well.
-        //
-        ret = true;
+        // Succeeded
+        ret = TRUE;
     }
-
     wprintf(L"\n");
-    
+
 Exit:
-    
     readContext.TerminateThread = TRUE;
     if (ReadThread)
     {
@@ -696,9 +666,7 @@ Exit:
     {
         CloseHandle(deviceWrite.hDevice);
     }
-
     filePathStream.close();
     offerfilePathStream.close();
-    
     return ret;
-}// FwUpdateOfferSrec()
+}

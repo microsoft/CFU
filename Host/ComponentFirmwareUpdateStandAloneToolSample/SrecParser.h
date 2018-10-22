@@ -37,39 +37,35 @@ Environment:
 
 #pragma once
 
-using namespace std;
-
-static bool ProcessSrecBin(ifstream& srecBinStream, FwUpdateCfu::ContentData& contentData)
+static BOOL ProcessSrecBin(std::ifstream& srecBinStream, FwUpdateCfu::ContentData& contentData)
 {
     contentData.length = 0;
-
     char pBuff[64] = { 0 };
 
     if (srecBinStream.eof())
     {
         wprintf(L"Stream reached the end of file\n");
-        return false;
+        return FALSE;
     }
 
-    //read the address offset from the binary file
+    // Read the address offset from the binary file
     srecBinStream.read(pBuff, sizeof(contentData.address));
-    contentData.address = *reinterpret_cast<uint32_t*>(pBuff);
+    contentData.address = (UINT32) *reinterpret_cast<UINT32*>(pBuff);
 
-    //read the byte length from the binary file
+    // Read the byte length from the binary file
     srecBinStream.read(pBuff, sizeof(contentData.length));
-    contentData.length = *reinterpret_cast<uint8_t*>(pBuff);
+    contentData.length = (UINT8) *reinterpret_cast<UINT8*>(pBuff);
 
     if (contentData.length == 0)
     {
-        //printf("length 0\n");
-        return false;
+        return FALSE;
     }
 
-    //read the content block using the length we just collected
+    // Read the content block using the length we just collected
     srecBinStream.read(pBuff, contentData.length);
 
-    //copy the content data into out var
+    // Copy the content data into out var
     memcpy_s(contentData.data, sizeof(contentData.data), pBuff, contentData.length);
 
-    return true;
+    return TRUE;
 }
