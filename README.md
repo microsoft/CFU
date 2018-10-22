@@ -9,7 +9,7 @@ For an overview, read this post: [Introducing Component Firmware Update](https:/
 The [Documentation](https://github.com/Microsoft/CFU/tree/master/Documentation) folder contains the CFU protocol specification and the CFU Driver Design documenation. <br>
 The [Host](https://github.com/Microsoft/CFU/tree/master/Host) folder contains a link to the sample CFU protocol driver source code on GitHub.<br>
 The [Firmware](https://github.com/Microsoft/CFU/tree/master/Firmware) folder contains sample firmware source code for implementing the CFU protocol. <br>
-
+The [Tools](https://github.com/Microsoft/CFU/tree/master/Tools) folder contains tools used with CFU. <br>
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
