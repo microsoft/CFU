@@ -169,7 +169,7 @@ Return Value:
         "\n"
         "    FwUpdateCfu.exe version <protocolSettingsPath> (to retrieve version of device)\n"
         "\n"
-        "        <VID> / <PID> = 0x045e or 045e\n"
+        "        An example protocol settings file is in the base dir (protocolSettings.cfg)"
         "\n");
 }
 
