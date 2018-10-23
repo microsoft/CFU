@@ -72,6 +72,9 @@ AddService=WUDFRd,0x000001fa,WUDFRD_ServiceInstall
 [LaptopMCUFirmwareUpdate.NT.Wdf]
 UmdfService=LaptopMCUFirmwareUpdate,LaptopMCUFirmwareUpdate_Install
 UmdfServiceOrder=LaptopMCUFirmwareUpdate
+; Let the reflector copy the METHOD_NEITHER buffers that the Hid.dll sends.
+; Without this directive, an upper client will lose ability to talk to the TLC over which this driver is loaded.
+UmdfMethodNeitherAction = Copy
 
 [LaptopMCUFirmwareUpdate_Install]
 UmdfLibraryVersion=$UMDFVERSION$
