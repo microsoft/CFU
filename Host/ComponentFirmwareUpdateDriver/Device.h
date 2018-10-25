@@ -77,7 +77,7 @@ typedef struct _DEVICE_CONTEXT
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(DEVICE_CONTEXT, DeviceContextGet)
 
 #define MemoryTag 'dUWF'
-#define EVENTLOG_PROVIDER_NAME L"SampleProvider"
+#define EVENTLOG_PROVIDER_NAME L"ContosoProvider"
 
 // eof: Device.h
 //

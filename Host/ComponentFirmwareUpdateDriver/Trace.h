@@ -28,16 +28,15 @@ Environment:
 // Driver Tracing GUID - {4659F1E1-5645-4657-9D92-E4B8B11D3429}
 // DMF Library Tracing GUID - {2AC66594-5157-43B7-82FE-6F462AD84978}
 //
-
 #define WPP_CONTROL_GUIDS                                                                                                                                   \
     WPP_DEFINE_CONTROL_GUID(                                                                                                                                \
-        ComponentFirmwareUpdateTraceGuid, (4659F1E1,5645,4657,9D92,E4B8B11D3429),                                                                                   \
+        ComponentFirmwareUpdateTraceGuid, (80b570f3,19fd,4d08,99e3,7b2d2921f1c5),                                                                                   \
         WPP_DEFINE_BIT(MYDRIVER_ALL_INFO)                                                                                                                   \
         WPP_DEFINE_BIT(TRACE_DRIVER)                                                                                                                        \
         WPP_DEFINE_BIT(TRACE_DEVICE)                                                                                                                        \
         )                                                                                                                                                   \
     WPP_DEFINE_CONTROL_GUID(                                                                                                                                \
-        DMFLibraryTraceGuid, (2AC66594,5157,43B7,82FE,6F462AD84978),                                                                                    \
+        DMFLibraryTraceGuid, (6ed71c03,0ad8,4bd9,809b,d1a4dc63da6e),                                                                                    \
         WPP_DEFINE_BIT(DMF_TRACE)                                                                                                                       \
         )
 //
