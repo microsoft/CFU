@@ -3,7 +3,7 @@
 
 Component Firmware Update (CFU) is a mechanism developed by the Microsoft Devices team which allows Original Equipment Manufacturers (OEM’s) and Independent Hardware Vendors (IHV’s) a reliable, robust against power interruptions and authenticated mechanism for updating firmware for devices that have shipped to customers. This release contains a reference device driver for delivering the firmware payload to a target device, and reference firmware for receiving the firmware payload and associated documentation.
 
-For an overview, read this post: [Introducing Component Firmware Update](https://blogs.windows.com/buildingapps/?p=54456).
+For an overview, read this post: [Introducing Component Firmware Update](https://blogs.windows.com/buildingapps/?p=54456) and watch the [WinHEC 2018 video on Component Firmware Update](https://developer.microsoft.com/en-us/windows/hardware/events).
 
 ## Contents
 The [Documentation](https://github.com/Microsoft/CFU/tree/master/Documentation) folder contains the CFU protocol specification and the CFU Driver Design documenation. <br>
