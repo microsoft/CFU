@@ -1,0 +1,70 @@
+;
+; Copyright (c) Microsoft Corporation. All rights reserved.
+;
+; INF Name:
+;
+;     CfuVirtualHid.inx
+;
+; Abstract:
+;
+;     INF for installing the Virtual CFU Hid driver.
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=Firmware
+ClassGuid={f2e7dd72-6468-4e36-b6f1-6488f42c1b52}
+Provider=%ManufacturerName%
+CatalogFile=CfuVirtualHid.cat
+DriverVer=  ; FYI: Build system will update this automatically, even if you set DriverVer in stampinf property pages
+PnpLockdown = 1
+
+[DestinationDirs]
+DefaultDestDir = 13
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+CfuVirtualHid.sys  = 1,,
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%CfuVirtualHid.DeviceDesc%=CfuVirtualHid_Device, HID\CFU_VIRTUAL_DEVICE
+
+[CfuVirtualHid_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+CfuVirtualHid.sys
+
+[CfuVirtualHid_Device.NT.HW]
+AddReg=CfuVirtualHid_Device_AddReg.HW
+
+[CfuVirtualHid_Device_AddReg.HW]
+HKR,,"LowerFilters",0x00010000,Vhf
+
+;-------------- Service installation
+[CfuVirtualHid_Device.NT.Services]
+AddService = CfuVirtualHid,%SPSVCINST_ASSOCSERVICE%, CfuVirtualHid_Service_Inst
+
+; -------------- CfuVirtualHid driver install sections
+[CfuVirtualHid_Service_Inst]
+DisplayName    = %CfuVirtualHid.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %13%\CfuVirtualHid.sys
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="Surface"
+DiskName = "CfuVirtualHid Installation Disk"
+CfuVirtualHid.DeviceDesc = "CfuVirtualHid Device"
+CfuVirtualHid.SVCDESC = "CfuVirtualHid Service"

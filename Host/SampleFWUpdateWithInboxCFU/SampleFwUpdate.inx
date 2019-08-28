@@ -1,0 +1,89 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; File:               SampleFwUpdate.inx
+;
+; Description:        Driver installation file for Sample firmware update.
+;
+; Copyright (C) Microsoft Corporation.  All Rights Reserved.
+; Licensed under the MIT license.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[Version]
+Signature="$Windows NT$"
+Class=Firmware
+ClassGuid={f2e7dd72-6468-4e36-b6f1-6488f42c1b52}
+Provider=%ManufacturerName%
+CatalogFile=SampleFwUpdate.cat
+DriverVer= ; Set in target output .inf
+PnPLockDown=1
+
+[SourceDisksNames]
+1= %DiskName%
+
+[DestinationDirs]
+SampleFwUpdate.CopyFiles=13
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%SampleFwUpdate.DeviceDesc%=SampleFwUpdate, VHF\VID_045E&PID_0111; HardwareID for Sample Virtual Device
+
+[SampleFwUpdate.NT]
+Include            = HidCfu.inf
+Needs              = HidCfu.NT
+CopyFiles          = SampleFwUpdate.CopyFiles
+
+[SampleFwUpdate.NT.Wdf]
+Include            = HidCfu.inf
+Needs              = HidCfu.NT.Wdf
+
+[SampleFwUpdate.NT.HW]
+AddReg = SampleFwUpdate_HWAddReg
+
+[SampleFwUpdate_HWAddReg]
+HKR,,FriendlyName,,%FwUpdateFriendlyName%
+HKR,,Alignment,0x00010001, 1                       ; (No Alignment)
+HKR,,OfferInputValueCapabilityUsageRangeMinimum,0x00010001,0x8A
+HKR,,OfferOutputValueCapabilityUsageRangeMinimum,0x00010001, 0x8E
+HKR,,PayloadInputValueCapabilityUsageRangeMinimum,0x00010001,0x66
+HKR,,PayloadOutputValueCapabilityUsageRangeMinimum,0x00010001,0x61
+HKR,,VersionsFeatureValueCapabilityUsageRangeMinimum,0x00010001, 0x62
+
+; Specify the location of the firmware offer and payload file in the registy.
+; The files are kept in driver store. When deployed, %13% would be expanded to the actual path 
+; in driver store.
+;
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\MAIN,Offer, 0x00000000, %13%\Sample_MAIN.offer.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\MAIN,Payload, 0x00000000, %13%\Sample_MAIN.payload.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\SUB1,Offer, 0x00000000, %13%\Sample_SUB1.offer.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\SUB1,Payload, 0x00000000, %13%\Sample_SUB1.payload.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\SUB2,Offer, 0x00000000, %13%\Sample_SUB2.offer.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\SUB2,Payload, 0x00000000, %13%\Sample_SUB2.payload.bin 
+
+[SourceDisksFiles]
+Sample_MAIN.offer.bin=1 
+Sample_MAIN.payload.bin=1 
+Sample_SUB1.offer.bin=1 
+Sample_SUB1.payload.bin=1 
+Sample_SUB2.offer.bin=1 
+Sample_SUB2.payload.bin=1 
+
+[SampleFwUpdate.CopyFiles]
+Sample_MAIN.offer.bin 
+Sample_MAIN.payload.bin 
+Sample_SUB1.offer.bin 
+Sample_SUB1.payload.bin 
+Sample_SUB2.offer.bin
+Sample_SUB2.payload.bin
+
+[SampleFwUpdate.NT.Services]
+Include            = HidCfu.inf
+Needs              = HidCfu.NT.Services
+
+; =================== Generic ==================================
+
+[Strings]
+ManufacturerName="Surface"
+SampleFwUpdate.DeviceDesc = "Sample Firmware Update" 
+DiskName = "Sample Firmware Update Installation Disk"
+FwUpdateFriendlyName= "Sample Firmware Update"
