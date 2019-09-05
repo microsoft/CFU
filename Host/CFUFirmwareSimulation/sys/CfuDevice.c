@@ -49,7 +49,7 @@ Return Value:
 
     TraceEvents(TRACE_LEVEL_VERBOSE, TRACE_DEVICE, "CfuDevice_WriteReport");
 
-    if (HidTransferPacket->reportBufferLen < sizeof(OUTPUT_REPORT_LENGTH))
+    if (HidTransferPacket->reportBufferLen < (sizeof(OUTPUT_REPORT_LENGTH) + REPORT_ID_LENGTH))
     {
         goto Exit;
     }
@@ -82,6 +82,7 @@ Return Value:
     {
 
     case REPORT_ID_OFFER_OUTPUT:
+DbgBreakPoint();
         // NOTE: This could be either of the below.
         // FWUPDATE_OFFER_COMMAND
         // FWUPDATE_OFFER_INFO_ONLY_COMMAND
@@ -121,13 +122,17 @@ Return Value:
 
         // In either of the case send a success response!
         //
+        offerResponse.ReportId = REPORT_ID_OFFER_OUTPUT;
         offerResponse.Status = COMPONENT_FIRMWARE_UPDATE_OFFER_ACCEPT;
         offerResponse.Token = offerCommand->ComponentInfo.Token;
         responseBuffer->ResponseType = OFFER;
-        responseBuffer->Response = offerResponse.AsUInt16;
+        RtlCopyMemory(responseBuffer->Response,
+                      offerResponse.AsUInt16,
+                      sizeof(offerResponse.AsUInt16));
 
         break;
     case REPORT_ID_PAYLOAD_OUTPUT:
+DbgBreakPoint();
         // FWUPDATE_CONTENT_COMMAND
         //     Response: FWUPDATE_CONTENT_RESPONSE
 
@@ -148,10 +153,13 @@ Return Value:
         if (contentCommand->Flags & COMPONENT_FIRMWARE_UPDATE_FLAG_VERIFY)
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Verify Flag set");
 
+        contentRespose.ReportId = REPORT_ID_PAYLOAD_OUTPUT;
         contentRespose.Status = COMPONENT_FIRMWARE_UPDATE_SUCCESS;
         contentRespose.SequenceNumber = contentCommand->SequenceNumber;
         responseBuffer->ResponseType = CONTENT;
-        responseBuffer->Response = contentRespose.AsUInt16;
+        RtlCopyMemory(responseBuffer->Response,
+                      contentRespose.AsUInt16,
+                      sizeof(contentRespose.AsUInt16));
 
         break;
     }
@@ -211,7 +219,7 @@ Return Value:
     WDFDEVICE device;
     PDEVICE_CONTEXT deviceContext;
     NTSTATUS ntStatus;
-
+DbgBreakPoint();
     FuncEntry(TRACE_DEVICE);
 
     UNREFERENCED_PARAMETER(VhfOperationContext);
@@ -235,6 +243,7 @@ Return Value:
     ntStatus = STATUS_SUCCESS;
 
     GET_FWVERSION_RESPONSE firmwareVersionResponse = { 0 };
+    firmwareVersionResponse.ReportId = HidTransferPacket->reportId;
     firmwareVersionResponse.header.ComponentCount = 1;
     firmwareVersionResponse.header.ProtocolRevision = 02;
     firmwareVersionResponse.componentVersionsAndProperty[0].ComponentVersion.AsUInt32 = deviceContext->ComponentVersion.AsUInt32;
@@ -258,7 +267,7 @@ Exit:
 
 NTSTATUS
 CfuDevice_ResponseSend(
-    _In_ DMFMODULE DmfModule,
+    _In_ DEVICE_CONTEXT* DeviceContext,
     _In_ RESPONSE_BUFFER* ResponseBuffer
     )
 /*++
@@ -279,14 +288,10 @@ Return Value:
 --*/
 {
     NTSTATUS ntStatus;
-    WDFDEVICE device;
-    PDEVICE_CONTEXT deviceContext;
     UINT8 reportId;
 
-    device = DMF_ParentDeviceGet(DmfModule);
-    deviceContext = DeviceContextGet(device);
     reportId = 0;
-
+DbgBreakPoint();
     switch (ResponseBuffer->ResponseType)
     {
         case OFFER:
@@ -310,12 +315,12 @@ Return Value:
         HID_XFER_PACKET hidXferPacket;
         RtlZeroMemory(&hidXferPacket, sizeof(hidXferPacket));
         hidXferPacket.reportBuffer = (UCHAR*)&ResponseBuffer->Response;
-        hidXferPacket.reportBufferLen = sizeof(ResponseBuffer->Response);
+        hidXferPacket.reportBufferLen = sizeof(ResponseBuffer->Response) + REPORT_ID_LENGTH;
         hidXferPacket.reportId = reportId;
 
         // This function actually populates the upper layer's input report.
         //
-        ntStatus = DMF_VirtualHidDeviceVhf_ReadReportSend(deviceContext->DmfModuleVirtualHidDeviceVhf,
+        ntStatus = DMF_VirtualHidDeviceVhf_ReadReportSend(DeviceContext->DmfModuleVirtualHidDeviceVhf,
                                                           &hidXferPacket);
         if (! NT_SUCCESS(ntStatus))
         {
@@ -365,7 +370,7 @@ Return Value:
 
     ntStatus = STATUS_SUCCESS;
     deviceContext = DeviceContextGet(Device);
-
+DbgBreakPoint();
     // Set up some default values.
     //
     deviceContext->ComponentId = COMPONENT_ID;
@@ -424,7 +429,7 @@ Return Value:
     PAGED_CODE();
 
     FuncEntry(TRACE_DEVICE);
-
+DbgBreakPoint();
     deviceContext = DeviceContextGet(Device);
     ASSERT(deviceContext != NULL);
 

@@ -26,6 +26,8 @@
 #define FIRMWARE_VERSION_MINOR 4
 #define FIRMWARE_VERSION_VARIANT 5
 
+#define REPORT_ID_LENGTH        0x01
+
 #define OUTPUT_REPORT_LENGTH 0x3C
 #define INPUT_REPORT_LENGTH 0x20
 
@@ -65,6 +67,7 @@ typedef struct _COMPONENT_VERSION_AND_PROPERTY
 
 typedef struct _GET_FWVERSION_RESPONSE
 {
+    UCHAR ReportId;
     struct
     {
         UINT8 ComponentCount;
@@ -78,6 +81,7 @@ typedef struct _GET_FWVERSION_RESPONSE
 
 typedef struct
 {
+    UCHAR ReportId;
     struct
     {
         UINT8 SegmentNumber;
@@ -100,6 +104,7 @@ typedef struct
 
 typedef struct
 {
+    UCHAR ReportId;
     struct
     {
         UINT8 InformationCode;
@@ -112,6 +117,7 @@ typedef struct
 
 typedef struct
 {
+    UCHAR ReportId;
     struct
     {
         UINT8 CommmandCode;
@@ -124,21 +130,23 @@ typedef struct
 
 typedef union
 {
-    UINT16 AsUInt16;
+    UINT8 AsUInt16[16];
     struct
     {
+        UCHAR ReportId;
         UINT8 Reserved0[3];
         UINT8 Token;
         UINT32 Reserved1;
         UINT8 RejectReasonCode;
         UINT8 Reserved2[3];
         UINT8 Status;
-        UINT8 Reserved3[3];
+        UINT8 Reserved3[2];
     };
 } FWUPDATE_OFFER_RESPONSE;
 
 typedef struct _FWUPDATE_CONTENT_COMMAND
 {
+    UCHAR ReportId;
     UINT8 Flags;
     UINT8 Length;
     UINT16 SequenceNumber;
@@ -148,14 +156,15 @@ typedef struct _FWUPDATE_CONTENT_COMMAND
 
 typedef union
 {
-    UINT16 AsUInt16;
+    UINT8 AsUInt16[16];
     struct
     {
+        UCHAR ReportId;
         UINT16 SequenceNumber;
         UINT16 Reserved0;
         UINT8 Status;
         UINT8 Reserved1[3];
-        UINT32 Reserved2[2];
+        UINT32 Reserved2[1];
     };
 } FWUPDATE_CONTENT_RESPONSE;
 
@@ -168,7 +177,7 @@ typedef enum _RESPONSE_TYPE
 typedef struct _RESPONSE_BUFFER
 {
     RESPONSE_TYPE ResponseType;
-    UINT16 Response;
+    UINT8 Response[16];
 } RESPONSE_BUFFER;
 
 #pragma warning(pop)
@@ -215,7 +224,7 @@ CfuDevice_GetFeatureReport(
 
 NTSTATUS
 CfuDevice_ResponseSend(
-    _In_ DMFMODULE DmfModule,
+    _In_ DEVICE_CONTEXT* DeviceContext,
     _In_ RESPONSE_BUFFER* ResponseBuffer
     );
 

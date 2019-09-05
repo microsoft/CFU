@@ -32,7 +32,7 @@ const
 UCHAR
 g_CfuVirtualHid_HidReportDescriptor[] =
 {
-
+#if 0
     0x06, CFU_DEVICE_USAGE_PAGE,        // USAGE_PAGE(0xFF05) 
     0x09, CFU_DEVICE_USAGE,             // USAGE(0x0050) 
     0xA1, 0x01,                         // COLLECTION(0x01)
@@ -46,6 +46,21 @@ g_CfuVirtualHid_HidReportDescriptor[] =
     0x85, REPORT_ID_VERSIONS_FEATURE,   // REPORT_ID(32)
     0x09, VERSIONS_FEATURE_USAGE,       // USAGE(0x62)
     0xB2, 0x02, 0x01,                   // FEATURE(0x02)
+#endif
+0x06, 0x05, 0xFF,
+0x09, 0x50,
+0xA1, 0x01,
+0x85, 0x20,
+0x15, 0x00,
+0x27, 0xFF, 0xFF, 0xFF, 0xFF,
+0x75, 0x08,
+0x95, 0x3C,
+0x09, 0x62,
+0xB2, 0x02, 0x01,
+0x09, 0x60,
+0x82, 0x02, 0x01,
+0x09, 0x61,
+0x92, 0x02, 0x01,
 
     0x85, REPORT_ID_PAYLOAD_INPUT,      // REPORT_ID(34)
     0x27, 0xFF, 0xFF, 0xFF, 0xFF,       // LOGICAL_MAXIMUM(-1)
@@ -130,7 +145,6 @@ Return Value:
 
     WDFDEVICE device;
     PDEVICE_CONTEXT deviceContext;
-    DMFMODULE dmfModule;
 
     NTSTATUS ntStatus;
 
@@ -139,12 +153,11 @@ Return Value:
     VOID* clientBufferContext = NULL;
 
     FuncEntry(TRACE_DEVICE);
-
+DbgBreakPoint();
     // This Module is the parent of the Child Module that is passed in.
     // (Module callbacks always receive the Child Module's handle.)
     //
-    dmfModule = DMF_ParentModuleGet(DmfModule);
-    device = DMF_ParentDeviceGet(dmfModule);
+    device = DMF_ParentDeviceGet(DmfModule);
     deviceContext = DeviceContextGet(device);
 
     TraceEvents(TRACE_LEVEL_VERBOSE, TRACE_DEVICE, "CfuDevice_ResponseThreadWork");
@@ -169,7 +182,7 @@ Return Value:
 
     // Process the response here.
     //
-    ntStatus = CfuDevice_ResponseSend(dmfModule,
+    ntStatus = CfuDevice_ResponseSend(deviceContext,
                                       responseBuffer);
     if (! NT_SUCCESS(ntStatus))
     {
