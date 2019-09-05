@@ -317,6 +317,10 @@ DbgBreakPoint();
         hidXferPacket.reportBuffer = (UCHAR*)&ResponseBuffer->Response;
         hidXferPacket.reportBufferLen = sizeof(ResponseBuffer->Response) + REPORT_ID_LENGTH;
         hidXferPacket.reportId = reportId;
+        // Buffer must contain correct report id in first byte. In some cases, it is the
+        // same, as what came down, but in others it is different.
+        //
+        ResponseBuffer->Response[0] = reportId;
 
         // This function actually populates the upper layer's input report.
         //
