@@ -82,7 +82,6 @@ Return Value:
     {
 
     case REPORT_ID_OFFER_OUTPUT:
-DbgBreakPoint();
         // NOTE: This could be either of the below.
         // FWUPDATE_OFFER_COMMAND
         // FWUPDATE_OFFER_INFO_ONLY_COMMAND
@@ -132,7 +131,6 @@ DbgBreakPoint();
 
         break;
     case REPORT_ID_PAYLOAD_OUTPUT:
-DbgBreakPoint();
         // FWUPDATE_CONTENT_COMMAND
         //     Response: FWUPDATE_CONTENT_RESPONSE
 
@@ -219,7 +217,7 @@ Return Value:
     WDFDEVICE device;
     PDEVICE_CONTEXT deviceContext;
     NTSTATUS ntStatus;
-DbgBreakPoint();
+
     FuncEntry(TRACE_DEVICE);
 
     UNREFERENCED_PARAMETER(VhfOperationContext);
@@ -291,7 +289,7 @@ Return Value:
     UINT8 reportId;
 
     reportId = 0;
-DbgBreakPoint();
+
     switch (ResponseBuffer->ResponseType)
     {
         case OFFER:
@@ -374,7 +372,7 @@ Return Value:
 
     ntStatus = STATUS_SUCCESS;
     deviceContext = DeviceContextGet(Device);
-DbgBreakPoint();
+
     // Set up some default values.
     //
     deviceContext->ComponentId = COMPONENT_ID;
@@ -433,7 +431,7 @@ Return Value:
     PAGED_CODE();
 
     FuncEntry(TRACE_DEVICE);
-DbgBreakPoint();
+
     deviceContext = DeviceContextGet(Device);
     ASSERT(deviceContext != NULL);
 
