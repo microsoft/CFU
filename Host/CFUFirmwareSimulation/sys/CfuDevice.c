@@ -121,10 +121,11 @@ Return Value:
 
         // In either of the case send a success response!
         //
-        offerResponse.HidCfuOfferResponse.ReportId = REPORT_ID_OFFER_OUTPUT;
+        offerResponse.HidCfuOfferResponse.ReportId = REPORT_ID_OFFER_INPUT;
         offerResponse.HidCfuOfferResponse.CfuOfferResponse.Status = COMPONENT_FIRMWARE_UPDATE_OFFER_ACCEPT;
         offerResponse.HidCfuOfferResponse.CfuOfferResponse.Token = offerCommand->ComponentInfo.Token;
         responseBuffer->ResponseType = OFFER;
+        ASSERT(sizeof(responseBuffer->Response) == sizeof(offerResponse.AsBytes));
         RtlCopyMemory(responseBuffer->Response,
                       offerResponse.AsBytes,
                       sizeof(offerResponse.AsBytes));
@@ -151,10 +152,11 @@ Return Value:
         if (contentCommand->Flags & COMPONENT_FIRMWARE_UPDATE_FLAG_VERIFY)
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Verify Flag set");
 
-        contentRespose.HidCfuContentResponse.ReportId = REPORT_ID_PAYLOAD_OUTPUT;
+        contentRespose.HidCfuContentResponse.ReportId = REPORT_ID_PAYLOAD_INPUT;
         contentRespose.HidCfuContentResponse.CfuContentResponse.Status = COMPONENT_FIRMWARE_UPDATE_SUCCESS;
         contentRespose.HidCfuContentResponse.CfuContentResponse.SequenceNumber = contentCommand->SequenceNumber;
         responseBuffer->ResponseType = CONTENT;
+        ASSERT(sizeof(responseBuffer->Response) == sizeof(offerResponse.AsBytes));
         RtlCopyMemory(responseBuffer->Response,
                       contentRespose.AsBytes,
                       sizeof(contentRespose.AsBytes));
@@ -286,20 +288,15 @@ Return Value:
 --*/
 {
     NTSTATUS ntStatus;
-    UINT8 reportId;
-
-    reportId = 0;
 
     switch (ResponseBuffer->ResponseType)
     {
         case OFFER:
-            reportId = REPORT_ID_OFFER_INPUT;
-            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Sending Offer Response ReportId=0x%x", reportId);
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Sending Offer Response ReportId=0x%x", ResponseBuffer->Response[0]);
             ntStatus = STATUS_SUCCESS;
             break;
         case CONTENT:
-            reportId = REPORT_ID_PAYLOAD_INPUT;
-            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Sending Offer Response ReportId=0x%x", reportId);
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Sending Offer Response ReportId=0x%x", ResponseBuffer->Response[0]);
             ntStatus = STATUS_SUCCESS;
             break;
         default:
@@ -313,12 +310,8 @@ Return Value:
         HID_XFER_PACKET hidXferPacket;
         RtlZeroMemory(&hidXferPacket, sizeof(hidXferPacket));
         hidXferPacket.reportBuffer = (UCHAR*)&ResponseBuffer->Response;
-        hidXferPacket.reportBufferLen = sizeof(ResponseBuffer->Response) + REPORT_ID_LENGTH;
-        hidXferPacket.reportId = reportId;
-        // Buffer must contain correct report id in first byte. In some cases, it is the
-        // same, as what came down, but in others it is different.
-        //
-        ResponseBuffer->Response[0] = reportId;
+        hidXferPacket.reportBufferLen = sizeof(ResponseBuffer->Response);
+        hidXferPacket.reportId = ResponseBuffer->Response[0];
 
         // This function actually populates the upper layer's input report.
         //
