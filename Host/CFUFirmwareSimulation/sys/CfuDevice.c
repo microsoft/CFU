@@ -121,13 +121,13 @@ Return Value:
 
         // In either of the case send a success response!
         //
-        offerResponse.ReportId = REPORT_ID_OFFER_OUTPUT;
-        offerResponse.Status = COMPONENT_FIRMWARE_UPDATE_OFFER_ACCEPT;
-        offerResponse.Token = offerCommand->ComponentInfo.Token;
+        offerResponse.HidCfuOfferResponse.ReportId = REPORT_ID_OFFER_OUTPUT;
+        offerResponse.HidCfuOfferResponse.CfuOfferResponse.Status = COMPONENT_FIRMWARE_UPDATE_OFFER_ACCEPT;
+        offerResponse.HidCfuOfferResponse.CfuOfferResponse.Token = offerCommand->ComponentInfo.Token;
         responseBuffer->ResponseType = OFFER;
         RtlCopyMemory(responseBuffer->Response,
-                      offerResponse.AsUInt16,
-                      sizeof(offerResponse.AsUInt16));
+                      offerResponse.AsBytes,
+                      sizeof(offerResponse.AsBytes));
 
         break;
     case REPORT_ID_PAYLOAD_OUTPUT:
@@ -151,13 +151,13 @@ Return Value:
         if (contentCommand->Flags & COMPONENT_FIRMWARE_UPDATE_FLAG_VERIFY)
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Verify Flag set");
 
-        contentRespose.ReportId = REPORT_ID_PAYLOAD_OUTPUT;
-        contentRespose.Status = COMPONENT_FIRMWARE_UPDATE_SUCCESS;
-        contentRespose.SequenceNumber = contentCommand->SequenceNumber;
+        contentRespose.HidCfuContentResponse.ReportId = REPORT_ID_PAYLOAD_OUTPUT;
+        contentRespose.HidCfuContentResponse.CfuContentResponse.Status = COMPONENT_FIRMWARE_UPDATE_SUCCESS;
+        contentRespose.HidCfuContentResponse.CfuContentResponse.SequenceNumber = contentCommand->SequenceNumber;
         responseBuffer->ResponseType = CONTENT;
         RtlCopyMemory(responseBuffer->Response,
-                      contentRespose.AsUInt16,
-                      sizeof(contentRespose.AsUInt16));
+                      contentRespose.AsBytes,
+                      sizeof(contentRespose.AsBytes));
 
         break;
     }

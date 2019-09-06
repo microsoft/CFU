@@ -28,6 +28,7 @@
 
 #define REPORT_ID_LENGTH        0x01
 
+#define FEATURE_REPORT_LENGTH 0x3C
 #define OUTPUT_REPORT_LENGTH 0x3C
 #define INPUT_REPORT_LENGTH 0x20
 
@@ -128,20 +129,25 @@ typedef struct
     UINT32 Reserved0[3];
 } FWUPDATE_OFFER_EXTENDED_COMMAND;
 
+#define OFFER_RESPONSE_LENGTH_BYTES     16
+
 typedef union
 {
-    UINT8 AsUInt16[16];
-    struct
+    UINT8 AsBytes[OFFER_RESPONSE_LENGTH_BYTES];
+    struct HidCfuOfferResponse
     {
         UCHAR ReportId;
-        UINT8 Reserved0[3];
-        UINT8 Token;
-        UINT32 Reserved1;
-        UINT8 RejectReasonCode;
-        UINT8 Reserved2[3];
-        UINT8 Status;
-        UINT8 Reserved3[2];
-    };
+        struct CfuOfferResponse
+        {
+            UINT8 Reserved0[3];
+            UINT8 Token;
+            UINT32 Reserved1;
+            UINT8 RejectReasonCode;
+            UINT8 Reserved2[3];
+            UINT8 Status;
+            UINT8 Reserved3[2];
+        } CfuOfferResponse;
+    } HidCfuOfferResponse;
 } FWUPDATE_OFFER_RESPONSE;
 
 typedef struct _FWUPDATE_CONTENT_COMMAND
@@ -154,17 +160,25 @@ typedef struct _FWUPDATE_CONTENT_COMMAND
     UINT8 Data[52];
 } FWUPDATE_CONTENT_COMMAND;
 
+#define CONTENT_RESPONSE_LENGTH_BYTES     16
+
 typedef union
 {
-    UINT8 AsUInt16[16];
+    UINT8 AsBytes[CONTENT_RESPONSE_LENGTH_BYTES];
     struct
     {
-        UCHAR ReportId;
-        UINT16 SequenceNumber;
-        UINT16 Reserved0;
-        UINT8 Status;
-        UINT8 Reserved1[3];
-        UINT32 Reserved2[1];
+        struct HidCfuContentResponse
+        {
+            UCHAR ReportId;
+            struct CfuContentResponse
+            {
+                UINT16 SequenceNumber;
+                UINT16 Reserved0;
+                UINT8 Status;
+                UINT8 Reserved1[3];
+                UINT32 Reserved2[1];
+            } CfuContentResponse;
+        } HidCfuContentResponse;
     };
 } FWUPDATE_CONTENT_RESPONSE;
 
@@ -174,10 +188,12 @@ typedef enum _RESPONSE_TYPE
     CONTENT
 } RESPONSE_TYPE;
 
+#define RESPONSE_LENGTH_BYTES     16
+
 typedef struct _RESPONSE_BUFFER
 {
     RESPONSE_TYPE ResponseType;
-    UINT8 Response[16];
+    UINT8 Response[RESPONSE_LENGTH_BYTES];
 } RESPONSE_BUFFER;
 
 #pragma warning(pop)
@@ -204,7 +220,6 @@ typedef struct _DEVICE_CONTEXT
 } DEVICE_CONTEXT, *PDEVICE_CONTEXT;
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(DEVICE_CONTEXT, DeviceContextGet)
-
 
 VOID
 CfuDevice_WriteReport(
