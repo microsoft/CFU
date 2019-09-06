@@ -21,16 +21,16 @@
 #define PAYLOAD_OUTPUT_USAGE        0x61
 #define VERSIONS_FEATURE_USAGE      0x62
 
-#define COMPONENT_ID 0x30
-#define FIRMWARE_VERSION_MAJOR 123
-#define FIRMWARE_VERSION_MINOR 4
-#define FIRMWARE_VERSION_VARIANT 5
+#define COMPONENT_ID                0x30
+#define FIRMWARE_VERSION_MAJOR      123
+#define FIRMWARE_VERSION_MINOR      4
+#define FIRMWARE_VERSION_VARIANT    5
 
-#define REPORT_ID_LENGTH        0x01
+#define REPORT_ID_LENGTH            0x01
 
-#define FEATURE_REPORT_LENGTH 0x3C
-#define OUTPUT_REPORT_LENGTH 0x3C
-#define INPUT_REPORT_LENGTH 0x20
+#define FEATURE_REPORT_LENGTH       0x3C
+#define OUTPUT_REPORT_LENGTH        0x3C
+#define INPUT_REPORT_LENGTH         0x20
 
 #include <pshpack1.h>
 #pragma warning(push)
