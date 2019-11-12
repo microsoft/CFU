@@ -332,7 +332,7 @@ Return:
     NTSTATUS ntStatus;
     DMF_MODULE_ATTRIBUTES moduleAttributes;
     DMF_CONFIG_ComponentFirmwareUpdate componentFirmwareUpdateConfig;
-    DMF_MODULE_EVENT_CALLBACKS CFUProtocolCallbacks;
+    DMF_MODULE_EVENT_CALLBACKS moduleCallbacks;
 
     PDEVICE_CONTEXT deviceContext;
     ULONG numberOfFirmwareComponents;
@@ -359,7 +359,7 @@ Return:
 
     // It is possible that the driver may not have the firmware information yet.
     // This is a valid case when the extension package is not yet installed in the target.
-    // Dont create the CFU modules in such cases.
+    // Don't create the CFU modules in such cases.
     //
     if (0 == numberOfFirmwareComponents)
     {
@@ -376,13 +376,6 @@ Return:
     DMF_CONFIG_ComponentFirmwareUpdate_AND_ATTRIBUTES_INIT(&componentFirmwareUpdateConfig,
                                                            &moduleAttributes);
 
-    DMF_CONFIG_ComponentFirmwareUpdateHidTransport* hidTransportConfig;
-    DMF_COMPONENT_FIRMWARE_UPDATE_CONFIG_INIT_TRANSPORT_HID(&componentFirmwareUpdateConfig,
-                                                            &hidTransportConfig);
-
-    hidTransportConfig->Protocol = deviceContext->CfuHidTransportConfiguration.Protocol;
-    hidTransportConfig->NumberOfInputReportReadsPended = deviceContext->CfuHidTransportConfiguration.NumberOfInputReportReadsPended;
-
     componentFirmwareUpdateConfig.SupportResumeOnConnect = deviceContext->CfuProtocolConfiguration.SupportResumeOnConnect;
     componentFirmwareUpdateConfig.SupportProtocolTransactionSkipOptimization = deviceContext->CfuProtocolConfiguration.SupportProtocolTransactionSkipOptimization;
     componentFirmwareUpdateConfig.NumberOfFirmwareComponents = numberOfFirmwareComponents;
@@ -392,9 +385,10 @@ Return:
     moduleAttributes.ClientModuleInstanceName = "ComponentFirmwareUpdate";
 
     DMF_MODULE_ATTRIBUTES_EVENT_CALLBACKS_INIT(&moduleAttributes,
-                                               &CFUProtocolCallbacks);
-    CFUProtocolCallbacks.EvtModuleOnDeviceNotificationPostOpen = CFUProtocol_PostOpen_Callback;
-    CFUProtocolCallbacks.EvtModuleOnDeviceNotificationPreClose = CFUProtocol_PreClose_Callback;
+                                               &moduleCallbacks);
+    moduleCallbacks.EvtModuleOnDeviceNotificationPostOpen = CFUProtocol_PostOpen_Callback;
+    moduleCallbacks.EvtModuleOnDeviceNotificationPreClose = CFUProtocol_PreClose_Callback;
+
     DMF_DmfModuleAdd(DmfModuleInit,
                      &moduleAttributes,
                      WDF_NO_OBJECT_ATTRIBUTES,
