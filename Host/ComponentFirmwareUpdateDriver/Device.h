@@ -60,6 +60,9 @@ typedef struct _DEVICE_CONTEXT
     // Dmf Module Component Firmware Update.
     // 
     DMFMODULE DmfModuleComponentFirmwareUpdate;
+    // Dmf Module HID Transport.
+    //
+    DMFMODULE DmfModuleComponentFirmwareUpdateTransportHid;
     // Dmf Module Registry.
     // 
     DMFMODULE DmfModuleRegistry;
