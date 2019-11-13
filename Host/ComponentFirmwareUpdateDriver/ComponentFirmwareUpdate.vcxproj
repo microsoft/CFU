@@ -32,9 +32,10 @@
     <RequiresPackageProject>true</RequiresPackageProject>
     <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
     <Platform Condition="'$(Platform)' == ''">x64</Platform>
-    <ProjectName Condition ="$(SolutionName) == LaptopMCUFirmwareUpdate">LaptopMCUFirmwareUpdate</ProjectName>
-    <ProjectName Condition ="$(SolutionName) == DockFirmwareUpdate">DockFirmwareUpdate</ProjectName>
-    <ProjectName Condition ="$(ProjectName) == ''">ComponentFirmwareUpdate</ProjectName>
+    <ProjectName Condition="$(SolutionName) == LaptopMCUFirmwareUpdate">LaptopMCUFirmwareUpdate</ProjectName>
+    <ProjectName Condition="$(SolutionName) == DockFirmwareUpdate">DockFirmwareUpdate</ProjectName>
+    <ProjectName Condition="$(SolutionName) == VirtualDeviceFirmwareUpdate">VirtualDeviceFirmwareUpdate</ProjectName>
+    <ProjectName Condition="$(ProjectName) == ''">ComponentFirmwareUpdate</ProjectName>
     <WindowsTargetPlatformVersion>$(LatestTargetPlatformVersion)</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Label="PropertySheets">

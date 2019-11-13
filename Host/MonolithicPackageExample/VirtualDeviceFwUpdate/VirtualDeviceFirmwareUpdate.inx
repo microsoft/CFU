@@ -1,0 +1,99 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; File:               VirtualDeviceFirmwareUpdate.inx
+;
+; Description:        Driver installation file for VirtualDevice MCU, Audio firmware update.
+;
+; Copyright (C) Microsoft Corporation.  All Rights Reserved.
+; Licensed under the MIT license.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[Version]
+Signature="$Windows NT$"
+Class=Firmware
+ClassGuid={f2e7dd72-6468-4e36-b6f1-6488f42c1b52}
+Provider=%ManufacturerName%
+CatalogFile=VirtualDeviceFirmwareUpdate.cat
+DriverVer= ; Set in target output .inf
+PnPLockDown=1
+
+[SourceDisksNames]
+1 = %DiskName%
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%VirtualDeviceFirmwareUpdate.DeviceDesc%=VirtualDeviceFirmwareUpdate, HID\.... ; Your HardwareID for VirtualDevice MCU
+
+[VirtualDeviceFirmwareUpdate.NT]
+CopyFiles=VirtualDeviceFirmwareUpdate.CopyFiles
+
+[VirtualDeviceFirmwareUpdate.NT.HW]
+AddReg = VirtualDeviceFirmwareUpdate_HWAddReg
+
+[VirtualDeviceFirmwareUpdate_HWAddReg]
+HKR,,Protocol,0x00010001, 1           ;(PROTOCOL-USB)
+HKR,,FriendlyName,,%FwUpdateFriendlyName%
+; Specify the location of the firmware offer and payload file in the registy.
+; The files are kept in driver store. When deployed, %13% would be expanded to the actual path 
+; in driver store.
+;
+; You can change subkey name under CFU (e.g. "VirtualDevice_MCU"), and specify your own offer 
+; (e.g. "VirtualDevice_MCU.offer.bin") and payload (e.g "VirtualDevice_MCU.payload.bin") file name.
+;
+HKR,CFU\VirtualDevice_MCU,Offer,   0x00000000, %13%\VirtualDevice_MCU.offer.bin 
+HKR,CFU\VirtualDevice_MCU,Payload, 0x00000000, %13%\VirtualDevice_MCU.payload.bin 
+HKR,CFU\VirtualDevice_Audio,Offer,   0x00000000, %13%\VirtualDevice_Audio.offer.bin 
+HKR,CFU\VirtualDevice_Audio,Payload, 0x00000000, %13%\VirtualDevice_Audio.payload.bin 
+
+[SourceDisksFiles]
+VirtualDevice_MCU.offer.bin=1 
+VirtualDevice_MCU.payload.bin=1 
+VirtualDevice_Audio.offer.bin=1 
+VirtualDevice_Audio.payload.bin=1 
+VirtualDeviceFirmwareUpdate.dll=1
+
+[VirtualDeviceFirmwareUpdate.CopyFiles]
+VirtualDevice_MCU.offer.bin 
+VirtualDevice_MCU.payload.bin 
+VirtualDevice_Audio.offer.bin 
+VirtualDevice_Audio.payload.bin 
+VirtualDeviceFirmwareUpdate.dll
+
+[VirtualDeviceFirmwareUpdate.NT.Services]
+AddService=WUDFRd,0x000001fa,WUDFRD_ServiceInstall
+
+[VirtualDeviceFirmwareUpdate.NT.Wdf]
+UmdfService=VirtualDeviceFirmwareUpdate,VirtualDeviceFirmwareUpdate_Install
+UmdfServiceOrder=VirtualDeviceFirmwareUpdate
+; Let the reflector copy the METHOD_NEITHER buffers that the Hid.dll sends.
+; Without this directive, an upper client will lose ability to talk to the TLC over which this driver is loaded.
+UmdfMethodNeitherAction = Copy
+
+[VirtualDeviceFirmwareUpdate_Install]
+UmdfLibraryVersion=$UMDFVERSION$
+ServiceBinary=%12%\UMDF\VirtualDeviceFirmwareUpdate.dll
+
+[WUDFRD_ServiceInstall]
+DisplayName = %WudfRdDisplayName%
+ServiceType  = %SERVICE_KERNEL_DRIVER%
+StartType    = %SERVICE_DEMAND_START%
+ErrorControl = %SERVICE_ERROR_NORMAL%
+ServiceBinary = %12%\WUDFRd.sys
+
+[DestinationDirs]
+VirtualDeviceFirmwareUpdate.CopyFiles=12,UMDF ; copy to drivers\umdf
+
+; =================== Generic ==================================
+
+[Strings]
+ManufacturerName="{Your Manufacturer Name}"
+VirtualDeviceFirmwareUpdate.DeviceDesc = "VirtualDevice Firmware Update" 
+DiskName = "VirtualDevice Firmware Update Installation Disk"
+FwUpdateFriendlyName= "VirtualDevice Firmware Update"
+WudfRdDisplayName="Windows Driver Foundation - User-mode Driver Framework Reflector"
+
+; non-localizable
+SERVICE_KERNEL_DRIVER = 1
+SERVICE_DEMAND_START  = 3
+SERVICE_ERROR_NORMAL  = 1
