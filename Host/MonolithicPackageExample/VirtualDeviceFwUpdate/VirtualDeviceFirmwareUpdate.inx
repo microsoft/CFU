@@ -23,7 +23,7 @@ PnPLockDown=1
 %ManufacturerName%=Standard,NT$ARCH$
 
 [Standard.NT$ARCH$]
-%VirtualDeviceFirmwareUpdate.DeviceDesc%=VirtualDeviceFirmwareUpdate, HID\.... ; Your HardwareID for VirtualDevice MCU
+%VirtualDeviceFirmwareUpdate.DeviceDesc%=VirtualDeviceFirmwareUpdate, HID\VID_045E&UP:FA00_U:00F5 ; Your HardwareID for VirtualDevice MCU
 
 [VirtualDeviceFirmwareUpdate.NT]
 CopyFiles=VirtualDeviceFirmwareUpdate.CopyFiles
