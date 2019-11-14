@@ -21,10 +21,10 @@ Environment:
 
 typedef struct _DRIVER_FIRMWARE_INFORMATION
 {
-    WDFSTRING offerFileName;
-    WDFSTRING payloadFileName;
-    WDFMEMORY offerContentMemory;
-    WDFMEMORY payloadContentMemory;
+    WDFSTRING OfferFileName;
+    WDFSTRING PayloadFileName;
+    WDFMEMORY OfferContentMemory;
+    WDFMEMORY PayloadContentMemory;
 } DRIVER_FIRMWARE_INFORMATION, *PDRIVER_FIRMWARE_INFORMATION;
 
 typedef enum _HID_TRANSPORT_PROTOCOL

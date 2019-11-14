@@ -323,19 +323,21 @@ Return Value:
 
 --*/
 {
+    WDFDEVICE device;
+    PDEVICE_CONTEXT deviceContext;
 
     FuncEntry(TRACE_DEVICE);
 
-    UNREFERENCED_PARAMETER(DmfModule);
-
     PAGED_CODE();
+
+    device = DMF_ParentDeviceGet(DmfModule);
+    deviceContext = DeviceContextGet(device);
 
     TraceEvents(TRACE_LEVEL_INFORMATION, 
                 TRACE_DEVICE, 
                 "CFU Core Closed.");
 
-    // Nothing special to do.
-    //
+    DMF_ComponentFirmwareUpdate_Stop(deviceContext->DmfModuleComponentFirmwareUpdate);
 
     FuncExitVoid(TRACE_DEVICE);
 }
@@ -434,6 +436,9 @@ Return:
 
     hidTransportConfig.Protocol = deviceContext->CfuHidTransportConfiguration.Protocol;
     hidTransportConfig.NumberOfInputReportReadsPended = deviceContext->CfuHidTransportConfiguration.NumberOfInputReportReadsPended;
+    // No alignment. {Uncomment after the DMF submodule is updated}.
+    //
+    //hidTransportConfig.PayloadFillAlignment = 1;
 
     moduleAttributes.ClientModuleInstanceName = "ComponentFirmwareUpdateHidTransport";
 

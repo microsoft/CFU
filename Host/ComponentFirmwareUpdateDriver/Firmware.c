@@ -224,11 +224,11 @@ Return Value:
 
     PDRIVER_FIRMWARE_INFORMATION firmwareInformation = (PDRIVER_FIRMWARE_INFORMATION)WdfMemoryGetBuffer(firmwareInformationMemory,
                                                                                                         NULL);
-    if (firmwareInformation->offerContentMemory == WDF_NO_HANDLE)
+    if (firmwareInformation->OfferContentMemory == WDF_NO_HANDLE)
     {
         BOOL returnVal = Firmware_FileContentRead(device,
-                                                  firmwareInformation->offerFileName,
-                                                  &firmwareInformation->offerContentMemory);
+                                                  firmwareInformation->OfferFileName,
+                                                  &firmwareInformation->OfferContentMemory);
         if (!returnVal)
         {
             ntStatus = STATUS_FILE_NOT_AVAILABLE;
@@ -238,7 +238,7 @@ Return Value:
 
     PBYTE offerBuffer;
     size_t offerBufferSize;
-    offerBuffer = (PBYTE) WdfMemoryGetBuffer(firmwareInformation->offerContentMemory,
+    offerBuffer = (PBYTE) WdfMemoryGetBuffer(firmwareInformation->OfferContentMemory,
                                              &offerBufferSize);
     *FirmwareBuffer = offerBuffer;
     *FirmwareBufferLength = offerBufferSize;
@@ -295,11 +295,11 @@ Return Value:
 
     PDRIVER_FIRMWARE_INFORMATION firmwareInformation = (PDRIVER_FIRMWARE_INFORMATION)WdfMemoryGetBuffer(firmwareInformationMemory,
                                                                                                         NULL);
-    if (firmwareInformation->payloadContentMemory == WDF_NO_HANDLE)
+    if (firmwareInformation->PayloadContentMemory == WDF_NO_HANDLE)
     {
         BOOL returnVal = Firmware_FileContentRead(device,
-                                                  firmwareInformation->payloadFileName,
-                                                  &firmwareInformation->payloadContentMemory);
+                                                  firmwareInformation->PayloadFileName,
+                                                  &firmwareInformation->PayloadContentMemory);
         if (!returnVal)
         {
             ntStatus = STATUS_FILE_NOT_AVAILABLE;
@@ -309,7 +309,7 @@ Return Value:
 
     PBYTE payloadBuffer;
     size_t payloadBufferSize;
-    payloadBuffer = (PBYTE) WdfMemoryGetBuffer(firmwareInformation->payloadContentMemory,
+    payloadBuffer = (PBYTE) WdfMemoryGetBuffer(firmwareInformation->PayloadContentMemory,
                                                &payloadBufferSize);
     *FirmwareBuffer = payloadBuffer;
     *FirmwareBufferSize = payloadBufferSize;
