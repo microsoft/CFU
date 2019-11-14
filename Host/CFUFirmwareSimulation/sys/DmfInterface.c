@@ -32,8 +32,8 @@ const
 UCHAR
 g_CfuVirtualHid_HidReportDescriptor[] =
 {
-    0x06, CFU_DEVICE_USAGE_PAGE,        // USAGE_PAGE(0xFF05) 
-    0x09, CFU_DEVICE_USAGE,             // USAGE(0x0050) 
+    0x06, CFU_DEVICE_USAGE_PAGE,        // USAGE_PAGE(0xFA00) 
+    0x09, CFU_DEVICE_USAGE,             // USAGE(0xF5) 
     0xA1, 0x01,                         // COLLECTION(0x01)
     0x15, 0x00,                         // LOGICAL_MINIMUM(0)
     0x27, 0xFF, 0xFF, 0xFF, 0xFF,       // LOGICAL_MAXIMUM(-1)
@@ -41,30 +41,30 @@ g_CfuVirtualHid_HidReportDescriptor[] =
 
     0x85, REPORT_ID_VERSIONS_FEATURE,   // REPORT_ID(32)
     0x95, FEATURE_REPORT_LENGTH,        // REPORT COUNT(60)
-    0x09, VERSIONS_FEATURE_USAGE,       // USAGE(0x62)
+    0x09, VERSIONS_FEATURE_USAGE,       // USAGE(0x42)
     0xB2, 0x02, 0x01,                   // FEATURE(0x02)
 
     0x85, REPORT_ID_PAYLOAD_OUTPUT,     // REPORT_ID(32)
     0x95, OUTPUT_REPORT_LENGTH,         // REPORT COUNT(60)
-    0x09, PAYLOAD_OUTPUT_USAGE,         // USAGE(0x61)
+    0x09, PAYLOAD_OUTPUT_USAGE,         // USAGE(0x31)
     0x92, 0x02, 0x01,                   // OUTPUT(0x02)
 
     0x85, REPORT_ID_PAYLOAD_INPUT,      // REPORT_ID(34)
     0x27, 0xFF, 0xFF, 0xFF, 0xFF,       // LOGICAL_MAXIMUM(-1)
     0x75, INPUT_REPORT_LENGTH,          // REPORT SIZE(32)
     0x95, 0x04,                         // REPORT COUNT(4)
-    0x19, PAYLOAD_INPUT_USAGE_MIN,      // USAGE MIN (0x66)
-    0x29, PAYLOAD_INPUT_USAGE_MAX,      // USAGE MAX (0x69)
+    0x19, PAYLOAD_INPUT_USAGE_MIN,      // USAGE MIN (0x26)
+    0x29, PAYLOAD_INPUT_USAGE_MAX,      // USAGE MAX (0x29)
     0x81, 0x02,                         // INPUT(0x02)
 
     0x85, REPORT_ID_OFFER_INPUT,        // REPORT_ID(37)
-    0x19, OFFER_INPUT_USAGE_MIN,        // USAGE MIN (0x8A)
-    0x29, OFFER_INPUT_USAGE_MAX,        // USAGE MAX (0x8D)
+    0x19, OFFER_INPUT_USAGE_MIN,        // USAGE MIN (0x1A)
+    0x29, OFFER_INPUT_USAGE_MAX,        // USAGE MAX (0x1D)
     0x81, 0x02,                         // INPUT(0x02)
 
     0x85, REPORT_ID_OFFER_OUTPUT,       // REPORT_ID(37)
-    0x19, OFFER_OUTPUT_USAGE_MIN,       // USAGE MIN (0x8E)
-    0x29, OFFER_OUTPUT_USAGE_MAX,       // USAGE MAX (0x91)
+    0x19, OFFER_OUTPUT_USAGE_MIN,       // USAGE MIN (0x1E)
+    0x29, OFFER_OUTPUT_USAGE_MAX,       // USAGE MAX (0x21)
     0x91, 0x02,                         // OUTPUT(0x02)
 
     0xC0                                // END_COLLECTION()
