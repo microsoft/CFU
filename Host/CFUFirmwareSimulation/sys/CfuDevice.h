@@ -8,6 +8,7 @@
 
 #define REPORT_ID_VERSIONS_FEATURE  0x20
 #define REPORT_ID_PAYLOAD_OUTPUT    0x20
+#define REPORT_ID_DUMMY_INPUT       0x20
 #define REPORT_ID_PAYLOAD_INPUT     0x22
 #define REPORT_ID_OFFER_OUTPUT      0x25
 #define REPORT_ID_OFFER_INPUT       0x25
@@ -20,9 +21,10 @@
 #define PAYLOAD_INPUT_USAGE_MAX     0x29
 #define PAYLOAD_OUTPUT_USAGE        0x31
 #define VERSIONS_FEATURE_USAGE      0x42
+#define DUMMY_INPUT_USAGE           0x52
 
-#define COMPONENT_ID_MCU            0x10
-#define COMPONENT_ID_AUDIO          0x60
+#define COMPONENT_ID_MCU            0x30
+#define COMPONENT_ID_AUDIO          0x2
 
 #define FIRMWARE_VERSION_MAJOR      123
 #define FIRMWARE_VERSION_MINOR      4
