@@ -130,7 +130,6 @@ Return Value:
                 currentStatus = COMPONENT_FIRMWARE_UPDATE_OFFER_REJECT;
                 rejectReason = COMPONENT_FIRMWARE_UPDATE_OFFER_REJECT_SWAP_PENDING;
             }
-            //deviceContext->ComponentVersion.AsUInt32 = offerCommand->Version.AsUInt32;
         }
 
         // In either of the case send a success response!
