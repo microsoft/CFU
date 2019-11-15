@@ -203,6 +203,10 @@ typedef struct _RESPONSE_BUFFER
 
 #include <poppack.h>
 
+// MCU and Audio.
+//
+#define NUMBER_OF_COMPONENTS    2
+
 typedef struct _DEVICE_CONTEXT
 {
     // Dmf Module Vhf.
@@ -220,6 +224,11 @@ typedef struct _DEVICE_CONTEXT
     // Dmf Module Response BufferQueue.
     //
     DMFMODULE DmfModuleResponseBufferQueue;
+    // Indicates if components are updated.
+    //
+    ULONG CurrentComponentIndex;
+    ULONG ComponentIds[NUMBER_OF_COMPONENTS];
+    BOOLEAN ComponentsUpdated[NUMBER_OF_COMPONENTS];
 } DEVICE_CONTEXT, *PDEVICE_CONTEXT;
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(DEVICE_CONTEXT, DeviceContextGet)

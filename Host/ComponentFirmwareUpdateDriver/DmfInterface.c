@@ -438,7 +438,7 @@ Return:
     hidTransportConfig.NumberOfInputReportReadsPended = deviceContext->CfuHidTransportConfiguration.NumberOfInputReportReadsPended;
     // No alignment. {Uncomment after the DMF submodule is updated}.
     //
-    //hidTransportConfig.PayloadFillAlignment = 1;
+    hidTransportConfig.PayloadFillAlignment = 1;
 
     moduleAttributes.ClientModuleInstanceName = "ComponentFirmwareUpdateHidTransport";
 

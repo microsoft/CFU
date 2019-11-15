@@ -35,6 +35,8 @@ Return Value:
     WDFDEVICE device;
     NTSTATUS ntStatus;
     PDEVICE_CONTEXT deviceContext;
+    COMPONENT_FIRMWARE_UPDATE_OFFER_RESPONSE currentStatus;
+    COMPONENT_FIRMWARE_UPDATE_OFFER_RESPONSE_REJECT_REASON rejectReason;
 
     VOID* clientBuffer = NULL;
     VOID* clientBufferContext = NULL;
@@ -88,6 +90,10 @@ Return Value:
         // FWUPDATE_OFFER_EXTENDED_COMMAND
         //     Response: FWUPDATE_OFFER_RESPONSE
         FWUPDATE_OFFER_COMMAND* offerCommand = (FWUPDATE_OFFER_COMMAND*)HidTransferPacket->reportBuffer;
+
+        currentStatus = COMPONENT_FIRMWARE_UPDATE_OFFER_ACCEPT;
+        rejectReason = 0x0;
+
         if (offerCommand->ComponentInfo.ComponentId == 0xFF)
         {
             FWUPDATE_OFFER_INFO_ONLY_COMMAND* offerInformation = (FWUPDATE_OFFER_INFO_ONLY_COMMAND*)HidTransferPacket->reportBuffer;
@@ -115,14 +121,23 @@ Return Value:
                                                                offerCommand->Version.MajorVersion, 
                                                                offerCommand->Version.MinorVersion, 
                                                                offerCommand->Version.Variant);
-
+            if (!deviceContext->ComponentsUpdated[deviceContext->CurrentComponentIndex])
+            {
+                deviceContext->ComponentIds[deviceContext->CurrentComponentIndex] = offerCommand->ComponentInfo.ComponentId;
+            }
+            else
+            {
+                currentStatus = COMPONENT_FIRMWARE_UPDATE_OFFER_REJECT;
+                rejectReason = COMPONENT_FIRMWARE_UPDATE_OFFER_REJECT_SWAP_PENDING;
+            }
             //deviceContext->ComponentVersion.AsUInt32 = offerCommand->Version.AsUInt32;
         }
 
         // In either of the case send a success response!
         //
         offerResponse.HidCfuOfferResponse.ReportId = REPORT_ID_OFFER_INPUT;
-        offerResponse.HidCfuOfferResponse.CfuOfferResponse.Status = COMPONENT_FIRMWARE_UPDATE_OFFER_ACCEPT;
+        offerResponse.HidCfuOfferResponse.CfuOfferResponse.Status = currentStatus;
+        offerResponse.HidCfuOfferResponse.CfuOfferResponse.RejectReasonCode = rejectReason;
         offerResponse.HidCfuOfferResponse.CfuOfferResponse.Token = offerCommand->ComponentInfo.Token;
         responseBuffer->ResponseType = OFFER;
         ASSERT(sizeof(responseBuffer->Response) == sizeof(offerResponse.AsBytes));
@@ -144,13 +159,21 @@ Return Value:
                                                            contentCommand->Length);
 
         if (contentCommand->Flags & COMPONENT_FIRMWARE_UPDATE_FLAG_FIRST_BLOCK)
+        {
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "First block  Flag set ");
+        }
 
         if (contentCommand->Flags & COMPONENT_FIRMWARE_UPDATE_FLAG_LAST_BLOCK)
+        {
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Last block Flag set");
+            deviceContext->ComponentsUpdated[deviceContext->CurrentComponentIndex] = TRUE;
+            deviceContext->CurrentComponentIndex = (deviceContext->CurrentComponentIndex + 1) % NUMBER_OF_COMPONENTS;
+        }
 
         if (contentCommand->Flags & COMPONENT_FIRMWARE_UPDATE_FLAG_VERIFY)
+        {
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Verify Flag set");
+        }
 
         contentRespose.HidCfuContentResponse.ReportId = REPORT_ID_PAYLOAD_INPUT;
         contentRespose.HidCfuContentResponse.CfuContentResponse.Status = COMPONENT_FIRMWARE_UPDATE_SUCCESS;
