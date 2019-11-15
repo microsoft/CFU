@@ -36,8 +36,11 @@ The sample can be deployed using one of two approaches:
 First, install Visual Studio and Windows Driver Kit (WDK) following the steps [here](https://docs.microsoft.com/en-us/windows-hardware/drivers/download-the-wdk).
 
 Then, run the following git commands to get the Driver Module Framework (DMF) submodule required to build the samples.
-#### "git submodule init"
-#### "git submodule update"
+#### `git submodule init`
+#### `git submodule update`
+
+To update the existing DMF submodule, execute this command:
+##### `git submodule update --init --force --remote`
 
 You can change the default configuration to build for your version of the operating system. To select a configuration and build a driver:
 
