@@ -20,7 +20,7 @@ DriverVer= ;
 %ManufacturerName%=Standard,NT$ARCH$
 
 [Standard.NT$ARCH$]
-%VirtualDeviceFirmwareUpdate.ExtensionDesc%=VirtualDeviceFirmwareUpdate, HID\.... ; Your HardwareID for VirtualDevice MCU
+%VirtualDeviceFirmwareUpdate.ExtensionDesc%=VirtualDeviceFirmwareUpdate, HID\VID_045E&UP:FA00_U:00F5 ; HardwareID for VirtualDevice MCU
 
 [VirtualDeviceFirmwareUpdate.NT]
 CopyFiles=VirtualDeviceFirmwareUpdate.CopyFiles

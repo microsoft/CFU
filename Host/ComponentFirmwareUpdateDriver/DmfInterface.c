@@ -436,7 +436,7 @@ Return:
 
     hidTransportConfig.Protocol = deviceContext->CfuHidTransportConfiguration.Protocol;
     hidTransportConfig.NumberOfInputReportReadsPended = deviceContext->CfuHidTransportConfiguration.NumberOfInputReportReadsPended;
-    // No alignment. {Uncomment after the DMF submodule is updated}.
+    // No alignment requirement.
     //
     hidTransportConfig.PayloadFillAlignment = 1;
 

@@ -254,15 +254,5 @@ CfuDevice_ResponseSend(
     _In_ RESPONSE_BUFFER* ResponseBuffer
     );
 
-NTSTATUS
-CfuDevice_EvtDevicePrepareHardware(
-    _In_  WDFDEVICE Device,
-    _In_  WDFCMRESLIST ResourcesRaw,
-    _In_  WDFCMRESLIST ResourcesTranslated
-    );
-
-NTSTATUS
-CfuDevice_EvtDeviceReleaseHardware(
-    _In_  WDFDEVICE Device,
-    _In_  WDFCMRESLIST ResourcesTranslated
-    );
+EVT_WDF_DEVICE_PREPARE_HARDWARE CfuDevice_EvtDevicePrepareHardware;
+EVT_WDF_DEVICE_RELEASE_HARDWARE CfuDevice_EvtDeviceReleaseHardware;
