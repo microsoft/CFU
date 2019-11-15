@@ -21,7 +21,9 @@
 #define PAYLOAD_OUTPUT_USAGE        0x31
 #define VERSIONS_FEATURE_USAGE      0x42
 
-#define COMPONENT_ID                0x30
+#define COMPONENT_ID_MCU            0x10
+#define COMPONENT_ID_AUDIO          0x60
+
 #define FIRMWARE_VERSION_MAJOR      123
 #define FIRMWARE_VERSION_MINOR      4
 #define FIRMWARE_VERSION_VARIANT    5
@@ -215,9 +217,6 @@ typedef struct _DEVICE_CONTEXT
     // Version information for this device.
     //
     COMPONENT_VERSION ComponentVersion;
-    // Component ID for this device.
-    //
-    UINT8 ComponentId;
     // Dmf Module response processing Thread.
     //
     DMFMODULE DmfModuleThread;
@@ -227,7 +226,7 @@ typedef struct _DEVICE_CONTEXT
     // Indicates if components are updated.
     //
     ULONG CurrentComponentIndex;
-    ULONG ComponentIds[NUMBER_OF_COMPONENTS];
+    UINT8 ComponentIds[NUMBER_OF_COMPONENTS];
     BOOLEAN ComponentsUpdated[NUMBER_OF_COMPONENTS];
 } DEVICE_CONTEXT, *PDEVICE_CONTEXT;
 

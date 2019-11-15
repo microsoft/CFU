@@ -123,14 +123,17 @@ Return Value:
                                                                offerCommand->Version.Variant);
             if (!deviceContext->ComponentsUpdated[deviceContext->CurrentComponentIndex])
             {
-                deviceContext->ComponentIds[deviceContext->CurrentComponentIndex] = offerCommand->ComponentInfo.ComponentId;
+                if (deviceContext->ComponentIds[deviceContext->CurrentComponentIndex] != offerCommand->ComponentInfo.ComponentId)
+                {
+                    currentStatus = COMPONENT_FIRMWARE_UPDATE_OFFER_REJECT;
+                    rejectReason = COMPONENT_FIRMWARE_UPDATE_OFFER_REJECT_INV_MCU;
+                }
             }
             else
             {
                 currentStatus = COMPONENT_FIRMWARE_UPDATE_OFFER_REJECT;
                 rejectReason = COMPONENT_FIRMWARE_UPDATE_OFFER_REJECT_SWAP_PENDING;
             }
-            //deviceContext->ComponentVersion.AsUInt32 = offerCommand->Version.AsUInt32;
         }
 
         // In either of the case send a success response!
@@ -267,10 +270,12 @@ Return Value:
 
     GET_FWVERSION_RESPONSE firmwareVersionResponse = { 0 };
     firmwareVersionResponse.ReportId = HidTransferPacket->reportId;
-    firmwareVersionResponse.header.ComponentCount = 1;
+    firmwareVersionResponse.header.ComponentCount = NUMBER_OF_COMPONENTS;
     firmwareVersionResponse.header.ProtocolRevision = 02;
     firmwareVersionResponse.componentVersionsAndProperty[0].ComponentVersion.AsUInt32 = deviceContext->ComponentVersion.AsUInt32;
-    firmwareVersionResponse.componentVersionsAndProperty[0].ComponentProperty.ComponentId = deviceContext->ComponentId;
+    firmwareVersionResponse.componentVersionsAndProperty[0].ComponentProperty.ComponentId = deviceContext->ComponentIds[0];
+    firmwareVersionResponse.componentVersionsAndProperty[1].ComponentVersion.AsUInt32 = deviceContext->ComponentVersion.AsUInt32;
+    firmwareVersionResponse.componentVersionsAndProperty[1].ComponentProperty.ComponentId = deviceContext->ComponentIds[1];
 
     RtlCopyMemory(HidTransferPacket->reportBuffer,
                   &firmwareVersionResponse,
@@ -391,7 +396,8 @@ Return Value:
 
     // Set up some default values.
     //
-    deviceContext->ComponentId = COMPONENT_ID;
+    deviceContext->ComponentIds[0] = COMPONENT_ID_MCU;
+    deviceContext->ComponentIds[1] = COMPONENT_ID_AUDIO;
     deviceContext->ComponentVersion.MajorVersion = FIRMWARE_VERSION_MAJOR;
     deviceContext->ComponentVersion.MinorVersion = FIRMWARE_VERSION_MINOR;
     deviceContext->ComponentVersion.MinorVersion = FIRMWARE_VERSION_VARIANT;
