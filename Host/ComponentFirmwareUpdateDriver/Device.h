@@ -21,10 +21,10 @@ Environment:
 
 typedef struct _DRIVER_FIRMWARE_INFORMATION
 {
-    WDFSTRING offerFileName;
-    WDFSTRING payloadFileName;
-    WDFMEMORY offerContentMemory;
-    WDFMEMORY payloadContentMemory;
+    WDFSTRING OfferFileName;
+    WDFSTRING PayloadFileName;
+    WDFMEMORY OfferContentMemory;
+    WDFMEMORY PayloadContentMemory;
 } DRIVER_FIRMWARE_INFORMATION, *PDRIVER_FIRMWARE_INFORMATION;
 
 typedef enum _HID_TRANSPORT_PROTOCOL
@@ -60,6 +60,9 @@ typedef struct _DEVICE_CONTEXT
     // Dmf Module Component Firmware Update.
     // 
     DMFMODULE DmfModuleComponentFirmwareUpdate;
+    // Dmf Module HID Transport.
+    //
+    DMFMODULE DmfModuleComponentFirmwareUpdateTransportHid;
     // Dmf Module Registry.
     // 
     DMFMODULE DmfModuleRegistry;

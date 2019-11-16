@@ -582,10 +582,10 @@ Return Value:
     // Update the information collected.
     // We will do lazy file read.
     //
-    firmwareInformation->offerFileName = offerFileNameObj;
-    firmwareInformation->payloadFileName = payloadFileNameObj;
-    firmwareInformation->offerContentMemory = WDF_NO_HANDLE;
-    firmwareInformation->payloadContentMemory = WDF_NO_HANDLE;
+    firmwareInformation->OfferFileName = offerFileNameObj;
+    firmwareInformation->PayloadFileName = payloadFileNameObj;
+    firmwareInformation->OfferContentMemory = WDF_NO_HANDLE;
+    firmwareInformation->PayloadContentMemory = WDF_NO_HANDLE;
 
     ntStatus = WdfCollectionAdd(deviceContext->FirmwareBlobCollection, 
                                 firmwareMemory);

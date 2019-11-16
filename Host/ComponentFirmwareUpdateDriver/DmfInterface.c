@@ -199,14 +199,14 @@ Exit:
 static
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
-CFUProtocol_PostOpen_Callback(
+CFUHidTransport_PostOpen_Callback(
     _In_ DMFMODULE DmfModule
     )
 /*++
 
 Routine Description:
 
-    This is callback to indicate that CFU protocol module is opened (Post Open)
+    This is callback to indicate that CFU Hid Transport module is opened (Post Open)
 
 Arguments:
 
@@ -229,28 +229,64 @@ Return Value:
     device = DMF_ParentDeviceGet(DmfModule);
     deviceContext = DeviceContextGet(device);
 
+    // Bind the Modules using SampleInterface Interface.
+    // The decision about which Transport to bind has already been made and the
+    // Transport Module has already been created.
+    //
+    ntStatus = DMF_INTERFACE_BIND(deviceContext->DmfModuleComponentFirmwareUpdate,
+                                  deviceContext->DmfModuleComponentFirmwareUpdateTransportHid,
+                                  ComponentFirmwareUpdate);
+    if (!NT_SUCCESS(ntStatus))
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, 
+                    TRACE_DEVICE, 
+                    "DMF_INTERFACE_BIND fails: ntStatus=%!STATUS!", 
+                    ntStatus);
+        goto Exit;
+    }
+
     TraceEvents(TRACE_LEVEL_INFORMATION, 
-                TRACE_DRIVER, 
-                "Protocol Start Requested.");
+                TRACE_DEVICE, 
+                "Issuing Protocol Start.");
 
     ntStatus = DMF_ComponentFirmwareUpdate_Start(deviceContext->DmfModuleComponentFirmwareUpdate);
     if (!NT_SUCCESS(ntStatus))
     {
-        PWCHAR formatStrings[] = { L"ntStatus=0x%x" };
+        NTSTATUS ntStatus2;
+        WDFMEMORY deviceHardwareIdentifierMemory;
+        PWSTR deviceHardwareIdentifier;
+
+        // Get the Device's HardwareID.
+        //
+        deviceHardwareIdentifierMemory = WDF_NO_HANDLE;
+        deviceHardwareIdentifier = L"";
+        ntStatus2 = WdfDeviceAllocAndQueryProperty(device,
+                                                   DevicePropertyHardwareID, 
+                                                   PagedPool, 
+                                                   WDF_NO_OBJECT_ATTRIBUTES, 
+                                                   &deviceHardwareIdentifierMemory);
+        if (NT_SUCCESS(ntStatus2))
+        {
+            deviceHardwareIdentifier = (PWSTR) WdfMemoryGetBuffer(deviceHardwareIdentifierMemory,
+                                                                  NULL);
+        }
+
+        PWCHAR formatStrings[] = { L"HardwareId=%s", L"ntStatus=0x%x" };
 
         // Report the failure in Event Log.
         //
         DMF_Utility_EventLogEntryWriteUserMode(EVENTLOG_PROVIDER_NAME,
                                                EVENTLOG_ERROR_TYPE,
                                                EVENTLOG_MESSAGE_PROTOCOL_START_FAIL,
-                                               1,
+                                               ARRAYSIZE(formatStrings),
                                                formatStrings,
-                                               1,
+                                               ARRAYSIZE(formatStrings),
+                                               deviceHardwareIdentifier,
                                                ntStatus);
 
         // Failure in starting the protocol is non-recoverable.
         // Report the failure to framework and let it attempt to restart the driver.
-        // Note: This may result in non-started devnode.
+        // Note: This may result in banged out devnode.
         //
         WdfDeviceSetFailed(device,
                            WdfDeviceFailedAttemptRestart);
@@ -268,14 +304,14 @@ Exit:
 static
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
-CFUProtocol_PreClose_Callback(
+CFUHidTransport_PreClose_Callback(
     _In_ DMFMODULE DmfModule
     )
 /*++
 
 Routine Description:
 
-    This is callback to indicate that CFU Protocol is about to be closed (Pre Close)
+    This is callback to indicate that CFU Hid Transport is about to be closed (Pre Close)
 
 Arguments:
 
@@ -287,19 +323,21 @@ Return Value:
 
 --*/
 {
+    WDFDEVICE device;
+    PDEVICE_CONTEXT deviceContext;
 
     FuncEntry(TRACE_DEVICE);
 
-    UNREFERENCED_PARAMETER(DmfModule);
-
     PAGED_CODE();
 
+    device = DMF_ParentDeviceGet(DmfModule);
+    deviceContext = DeviceContextGet(device);
+
     TraceEvents(TRACE_LEVEL_INFORMATION, 
-                TRACE_DRIVER, 
+                TRACE_DEVICE, 
                 "CFU Core Closed.");
 
-    // Nothing special to do.
-    //
+    DMF_ComponentFirmwareUpdate_Stop(deviceContext->DmfModuleComponentFirmwareUpdate);
 
     FuncExitVoid(TRACE_DEVICE);
 }
@@ -331,8 +369,9 @@ Return:
 {
     NTSTATUS ntStatus;
     DMF_MODULE_ATTRIBUTES moduleAttributes;
+    DMF_MODULE_EVENT_CALLBACKS moduleCallbacks;
     DMF_CONFIG_ComponentFirmwareUpdate componentFirmwareUpdateConfig;
-    DMF_MODULE_EVENT_CALLBACKS CFUProtocolCallbacks;
+    DMF_CONFIG_ComponentFirmwareUpdateHidTransport hidTransportConfig;
 
     PDEVICE_CONTEXT deviceContext;
     ULONG numberOfFirmwareComponents;
@@ -359,7 +398,7 @@ Return:
 
     // It is possible that the driver may not have the firmware information yet.
     // This is a valid case when the extension package is not yet installed in the target.
-    // Dont create the CFU modules in such cases.
+    // Don't create the CFU modules in such cases.
     //
     if (0 == numberOfFirmwareComponents)
     {
@@ -376,13 +415,6 @@ Return:
     DMF_CONFIG_ComponentFirmwareUpdate_AND_ATTRIBUTES_INIT(&componentFirmwareUpdateConfig,
                                                            &moduleAttributes);
 
-    DMF_CONFIG_ComponentFirmwareUpdateHidTransport* hidTransportConfig;
-    DMF_COMPONENT_FIRMWARE_UPDATE_CONFIG_INIT_TRANSPORT_HID(&componentFirmwareUpdateConfig,
-                                                            &hidTransportConfig);
-
-    hidTransportConfig->Protocol = deviceContext->CfuHidTransportConfiguration.Protocol;
-    hidTransportConfig->NumberOfInputReportReadsPended = deviceContext->CfuHidTransportConfiguration.NumberOfInputReportReadsPended;
-
     componentFirmwareUpdateConfig.SupportResumeOnConnect = deviceContext->CfuProtocolConfiguration.SupportResumeOnConnect;
     componentFirmwareUpdateConfig.SupportProtocolTransactionSkipOptimization = deviceContext->CfuProtocolConfiguration.SupportProtocolTransactionSkipOptimization;
     componentFirmwareUpdateConfig.NumberOfFirmwareComponents = numberOfFirmwareComponents;
@@ -391,14 +423,34 @@ Return:
 
     moduleAttributes.ClientModuleInstanceName = "ComponentFirmwareUpdate";
 
-    DMF_MODULE_ATTRIBUTES_EVENT_CALLBACKS_INIT(&moduleAttributes,
-                                               &CFUProtocolCallbacks);
-    CFUProtocolCallbacks.EvtModuleOnDeviceNotificationPostOpen = CFUProtocol_PostOpen_Callback;
-    CFUProtocolCallbacks.EvtModuleOnDeviceNotificationPreClose = CFUProtocol_PreClose_Callback;
     DMF_DmfModuleAdd(DmfModuleInit,
                      &moduleAttributes,
                      WDF_NO_OBJECT_ATTRIBUTES,
                      &deviceContext->DmfModuleComponentFirmwareUpdate);
+
+    // ComponentFirmwareUpdateHidTransport
+    // -----------------------------------
+    //
+    DMF_CONFIG_ComponentFirmwareUpdateHidTransport_AND_ATTRIBUTES_INIT(&hidTransportConfig,
+                                                                       &moduleAttributes);
+
+    hidTransportConfig.Protocol = deviceContext->CfuHidTransportConfiguration.Protocol;
+    hidTransportConfig.NumberOfInputReportReadsPended = deviceContext->CfuHidTransportConfiguration.NumberOfInputReportReadsPended;
+    // No alignment requirement.
+    //
+    hidTransportConfig.PayloadFillAlignment = 1;
+
+    moduleAttributes.ClientModuleInstanceName = "ComponentFirmwareUpdateHidTransport";
+
+    DMF_MODULE_ATTRIBUTES_EVENT_CALLBACKS_INIT(&moduleAttributes,
+                                               &moduleCallbacks);
+    moduleCallbacks.EvtModuleOnDeviceNotificationPostOpen = CFUHidTransport_PostOpen_Callback;
+    moduleCallbacks.EvtModuleOnDeviceNotificationPreClose = CFUHidTransport_PreClose_Callback;
+
+    DMF_DmfModuleAdd(DmfModuleInit,
+                     &moduleAttributes,
+                     WDF_NO_OBJECT_ATTRIBUTES,
+                     &deviceContext->DmfModuleComponentFirmwareUpdateTransportHid);
 
 Exit:
 

@@ -31,7 +31,7 @@ Environment:
 
 #define WPP_CONTROL_GUIDS                                                                                                                                   \
     WPP_DEFINE_CONTROL_GUID(                                                                                                                                \
-        ComponentFirmwareUpdateTraceGuid, (4659F1E1,5645,4657,9D92,E4B8B11D3429),                                                                                   \
+        ComponentFirmwareUpdateTraceGuid, (4659F1E1,5645,4657,9D92,E4B8B11D3429),                                                                           \
         WPP_DEFINE_BIT(MYDRIVER_ALL_INFO)                                                                                                                   \
         WPP_DEFINE_BIT(TRACE_DRIVER)                                                                                                                        \
         WPP_DEFINE_BIT(TRACE_DEVICE)                                                                                                                        \
