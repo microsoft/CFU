@@ -343,7 +343,6 @@ Return Value:
                          deviceContext->DmfModuleComponentFirmwareUpdateTransportHid,
                          ComponentFirmwareUpdate);
 
-
     FuncExitVoid(TRACE_DEVICE);
 }
 #pragma code_seg()
