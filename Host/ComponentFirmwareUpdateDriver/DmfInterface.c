@@ -339,6 +339,10 @@ Return Value:
 
     DMF_ComponentFirmwareUpdate_Stop(deviceContext->DmfModuleComponentFirmwareUpdate);
 
+    DMF_INTERFACE_UNBIND(deviceContext->DmfModuleComponentFirmwareUpdate,
+                         deviceContext->DmfModuleComponentFirmwareUpdateTransportHid,
+                         ComponentFirmwareUpdate);
+
     FuncExitVoid(TRACE_DEVICE);
 }
 #pragma code_seg()
