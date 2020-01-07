@@ -128,6 +128,20 @@ Return Value:
                     currentStatus = COMPONENT_FIRMWARE_UPDATE_OFFER_REJECT;
                     rejectReason = COMPONENT_FIRMWARE_UPDATE_OFFER_REJECT_INV_MCU;
                 }
+                else
+                {
+                    // Save pending version so it can be written when final block is received.
+                    // (Just for demonstration purposes.)
+                    //
+                    deviceContext->PendingComponentVersion[deviceContext->CurrentComponentIndex].MajorVersion = offerCommand->Version.MajorVersion;
+                    deviceContext->PendingComponentVersion[deviceContext->CurrentComponentIndex].MinorVersion = offerCommand->Version.MinorVersion;
+                    deviceContext->PendingComponentVersion[deviceContext->CurrentComponentIndex].Variant = offerCommand->Version.Variant;
+                    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "ComponenentVersion[%d]=%d:%d:%d [pending]",
+                                deviceContext->CurrentComponentIndex,
+                                deviceContext->PendingComponentVersion[deviceContext->CurrentComponentIndex].MajorVersion,
+                                deviceContext->PendingComponentVersion[deviceContext->CurrentComponentIndex].MinorVersion,
+                                deviceContext->PendingComponentVersion[deviceContext->CurrentComponentIndex].Variant);
+                }
             }
             else
             {
@@ -169,10 +183,19 @@ Return Value:
         if (contentCommand->Flags & COMPONENT_FIRMWARE_UPDATE_FLAG_LAST_BLOCK)
         {
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Last block Flag set");
+
             deviceContext->ComponentsUpdated[deviceContext->CurrentComponentIndex] = TRUE;
+            deviceContext->ComponentVersion[deviceContext->CurrentComponentIndex].MajorVersion = deviceContext->PendingComponentVersion[deviceContext->CurrentComponentIndex].MajorVersion;
+            deviceContext->ComponentVersion[deviceContext->CurrentComponentIndex].MinorVersion = deviceContext->PendingComponentVersion[deviceContext->CurrentComponentIndex].MinorVersion;
+            deviceContext->ComponentVersion[deviceContext->CurrentComponentIndex].Variant = deviceContext->PendingComponentVersion[deviceContext->CurrentComponentIndex].Variant;
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "ComponenentVersion[%d]=%d:%d:%d [update]",
+                        deviceContext->CurrentComponentIndex,
+                        deviceContext->ComponentVersion[deviceContext->CurrentComponentIndex].MajorVersion,
+                        deviceContext->ComponentVersion[deviceContext->CurrentComponentIndex].MinorVersion,
+                        deviceContext->ComponentVersion[deviceContext->CurrentComponentIndex].Variant);
+
             deviceContext->CurrentComponentIndex = (deviceContext->CurrentComponentIndex + 1) % NUMBER_OF_COMPONENTS;
         }
-
         if (contentCommand->Flags & COMPONENT_FIRMWARE_UPDATE_FLAG_VERIFY)
         {
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Verify Flag set");
@@ -272,9 +295,9 @@ Return Value:
     firmwareVersionResponse.ReportId = HidTransferPacket->reportId;
     firmwareVersionResponse.header.ComponentCount = NUMBER_OF_COMPONENTS;
     firmwareVersionResponse.header.ProtocolRevision = 02;
-    firmwareVersionResponse.componentVersionsAndProperty[0].ComponentVersion.AsUInt32 = deviceContext->ComponentVersion.AsUInt32;
+    firmwareVersionResponse.componentVersionsAndProperty[0].ComponentVersion.AsUInt32 = deviceContext->ComponentVersion[0].AsUInt32;
     firmwareVersionResponse.componentVersionsAndProperty[0].ComponentProperty.ComponentId = deviceContext->ComponentIds[0];
-    firmwareVersionResponse.componentVersionsAndProperty[1].ComponentVersion.AsUInt32 = deviceContext->ComponentVersion.AsUInt32;
+    firmwareVersionResponse.componentVersionsAndProperty[1].ComponentVersion.AsUInt32 = deviceContext->ComponentVersion[1].AsUInt32;
     firmwareVersionResponse.componentVersionsAndProperty[1].ComponentProperty.ComponentId = deviceContext->ComponentIds[1];
 
     RtlCopyMemory(HidTransferPacket->reportBuffer,
@@ -398,9 +421,22 @@ Return Value:
     //
     deviceContext->ComponentIds[0] = COMPONENT_ID_MCU;
     deviceContext->ComponentIds[1] = COMPONENT_ID_AUDIO;
-    deviceContext->ComponentVersion.MajorVersion = FIRMWARE_VERSION_MAJOR;
-    deviceContext->ComponentVersion.MinorVersion = FIRMWARE_VERSION_MINOR;
-    deviceContext->ComponentVersion.MinorVersion = FIRMWARE_VERSION_VARIANT;
+    deviceContext->ComponentVersion[0].MajorVersion = FIRMWARE_VERSION_MAJOR;
+    deviceContext->ComponentVersion[1].MajorVersion = FIRMWARE_VERSION_MAJOR;
+    deviceContext->ComponentVersion[0].MinorVersion = FIRMWARE_VERSION_MINOR;
+    deviceContext->ComponentVersion[1].MinorVersion = FIRMWARE_VERSION_MINOR;
+    deviceContext->ComponentVersion[0].Variant = FIRMWARE_VERSION_VARIANT;
+    deviceContext->ComponentVersion[1].Variant = FIRMWARE_VERSION_VARIANT;
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "ComponenentVersion[%d]=%d:%d:%d [initialize]",
+                0,
+                deviceContext->ComponentVersion[0].MajorVersion,
+                deviceContext->ComponentVersion[0].MinorVersion,
+                deviceContext->ComponentVersion[0].Variant);
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "ComponenentVersion[%d]=%d:%d:%d [initialize]",
+                1,
+                deviceContext->ComponentVersion[1].MajorVersion,
+                deviceContext->ComponentVersion[1].MinorVersion,
+                deviceContext->ComponentVersion[1].Variant);
 
     // Start the worker thread
     // NOTE: By design, the start/stop of the thread is controlled by the ClientDriver.
