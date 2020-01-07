@@ -216,9 +216,6 @@ typedef struct _DEVICE_CONTEXT
     // Dmf Module Vhf.
     //
     DMFMODULE DmfModuleVirtualHidDeviceVhf;
-    // Version information for this device.
-    //
-    COMPONENT_VERSION ComponentVersion;
     // Dmf Module response processing Thread.
     //
     DMFMODULE DmfModuleThread;
@@ -230,6 +227,10 @@ typedef struct _DEVICE_CONTEXT
     ULONG CurrentComponentIndex;
     UINT8 ComponentIds[NUMBER_OF_COMPONENTS];
     BOOLEAN ComponentsUpdated[NUMBER_OF_COMPONENTS];
+    COMPONENT_VERSION ComponentVersion[NUMBER_OF_COMPONENTS];
+    // Pending version.
+    //
+    COMPONENT_VERSION PendingComponentVersion[NUMBER_OF_COMPONENTS];
 } DEVICE_CONTEXT, *PDEVICE_CONTEXT;
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(DEVICE_CONTEXT, DeviceContextGet)
