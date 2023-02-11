@@ -41,10 +41,10 @@ HKR,,FriendlyName,,%FwUpdateFriendlyName%
 ; You can change subkey name under CFU (e.g. "VirtualDevice_MCU"), and specify your own offer 
 ; (e.g. "VirtualDevice_MCU.offer.bin") and payload (e.g "VirtualDevice_MCU.payload.bin") file name.
 ;
-HKR,CFU\VirtualDevice_MCU,Offer,   0x00000000, %13%\VirtualDevice_MCU.offer.bin 
-HKR,CFU\VirtualDevice_MCU,Payload, 0x00000000, %13%\VirtualDevice_MCU.payload.bin 
-HKR,CFU\VirtualDevice_Audio,Offer,   0x00000000, %13%\VirtualDevice_Audio.offer.bin 
-HKR,CFU\VirtualDevice_Audio,Payload, 0x00000000, %13%\VirtualDevice_Audio.payload.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\VirtualDevice_MCU,Offer,   0x00000000, %13%\VirtualDevice_MCU.offer.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\VirtualDevice_MCU,Payload, 0x00000000, %13%\VirtualDevice_MCU.payload.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\VirtualDevice_Audio,Offer,   0x00000000, %13%\VirtualDevice_Audio.offer.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\VirtualDevice_Audio,Payload, 0x00000000, %13%\VirtualDevice_Audio.payload.bin 
 
 [SourceDisksFiles]
 VirtualDevice_MCU.offer.bin=1 

@@ -185,13 +185,13 @@ Windows ensures that the driver is loaded when the component is enumerated on th
 
     [FirmwareUpdate_Component1_HWAddReg]
     
-    HKR,CFU\\_Dock_MCU_,Offer, 0x00000000,%13%\\_Dock_MCU.offer.bin_
+    HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\\_Dock_MCU_,Offer, 0x00000000,%13%\\_Dock_MCU.offer.bin_
         
-    HKR,CFU\\_Dock_MCU_,Payload, 0x00000000, %13%\\_Dock_MCU.payload.bin_
+    HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\\_Dock_MCU_,Payload, 0x00000000, %13%\\_Dock_MCU.payload.bin_
         
-    HKR,CFU\\_Dock_Audio_,Offer, 0x00000000, %13%\\_Dock_Audio.offer.bin_
+    HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\\_Dock_Audio_,Offer, 0x00000000, %13%\\_Dock_Audio.offer.bin_
         
-    HKR,CFU\\_Dock_Audio_Sub_,Payload, 0x00000000, %13%\\_Dock_Audio.payload.bin_
+    HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\\_Dock_Audio_Sub_,Payload, 0x00000000, %13%\\_Dock_Audio.payload.bin_
     
    - For the multiple package approach, update the extension INF for each component with information about your firmware files.
    - For a monolithic package approach, update the INF file for the device.

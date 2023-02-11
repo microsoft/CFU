@@ -45,12 +45,12 @@ HKR,,FriendlyName,,%FwUpdateFriendlyName%
 ; You can change subkey name under CFU (e.g. "Laptop_MCU"), and specify your own offer 
 ; (e.g. "Laptop_MCU.offer.bin") and payload (e.g "Laptop_MCU.payload.bin") file name.
 ;
-HKR,CFU\Laptop_MCU, Offer,   0x00000000, %13%\Laptop_MCU.offer.bin 
-HKR,CFU\Laptop_MCU, Payload, 0x00000000, %13%\Laptop_MCU.payload.bin 
-HKR,CFU\Laptop_FPGA,Offer,   0x00000000, %13%\Laptop_FPGA.offer.bin 
-HKR,CFU\Laptop_FPGA,Payload, 0x00000000, %13%\Laptop_FPGA.payload.bin 
-HKR,CFU\Laptop_TCPM,Offer,   0x00000000, %13%\Laptop_TCPM.offer.bin 
-HKR,CFU\Laptop_TCPM,Payload, 0x00000000, %13%\Laptop_TCPM.payload.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\Laptop_MCU, Offer,   0x00000000, %13%\Laptop_MCU.offer.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\Laptop_MCU, Payload, 0x00000000, %13%\Laptop_MCU.payload.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\Laptop_FPGA,Offer,   0x00000000, %13%\Laptop_FPGA.offer.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\Laptop_FPGA,Payload, 0x00000000, %13%\Laptop_FPGA.payload.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\Laptop_TCPM,Offer,   0x00000000, %13%\Laptop_TCPM.offer.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\Laptop_TCPM,Payload, 0x00000000, %13%\Laptop_TCPM.payload.bin 
 
 [SourceDisksFiles]
 Laptop_MCU.offer.bin=1 

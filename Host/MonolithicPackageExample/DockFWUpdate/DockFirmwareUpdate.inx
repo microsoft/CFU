@@ -41,10 +41,10 @@ HKR,,FriendlyName,,%FwUpdateFriendlyName%
 ; You can change subkey name under CFU (e.g. "Dock_MCU"), and specify your own offer 
 ; (e.g. "Dock_MCU.offer.bin") and payload (e.g "Dock_MCU.payload.bin") file name.
 ;
-HKR,CFU\Dock_MCU,Offer,   0x00000000, %13%\Dock_MCU.offer.bin 
-HKR,CFU\Dock_MCU,Payload, 0x00000000, %13%\Dock_MCU.payload.bin 
-HKR,CFU\Dock_Audio,Offer,   0x00000000, %13%\Dock_Audio.offer.bin 
-HKR,CFU\Dock_Audio,Payload, 0x00000000, %13%\Dock_Audio.payload.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\Dock_MCU,Offer,   0x00000000, %13%\Dock_MCU.offer.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\Dock_MCU,Payload, 0x00000000, %13%\Dock_MCU.payload.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\Dock_Audio,Offer,   0x00000000, %13%\Dock_Audio.offer.bin 
+HKR,A410A898-8132-4246-AC1A-30F1E98BB0A4\Dock_Audio,Payload, 0x00000000, %13%\Dock_Audio.payload.bin 
 
 [SourceDisksFiles]
 Dock_MCU.offer.bin=1 
